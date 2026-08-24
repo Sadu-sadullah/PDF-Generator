@@ -1,3 +1,25 @@
+// Salary mapping definitions
+const designationSalaries = {
+  "Software Engineer": "$95,000.00 USD / Year",
+  "Project Manager": "$85,000.00 USD / Year",
+  "Data Analyst": "$75,000.00 USD / Year",
+  "Financial Consultant": "$90,000.00 USD / Year",
+  "HR Specialist": "$65,000.00 USD / Year",
+};
+
+// Auto-populate salary handler
+document.addEventListener("DOMContentLoaded", () => {
+  const designationSelect = document.getElementById("designationSelect");
+  const salaryInput = document.getElementById("salaryInput");
+
+  if (designationSelect && salaryInput) {
+    designationSelect.addEventListener("change", function () {
+      const selectedVal = this.value;
+      salaryInput.value = designationSalaries[selectedVal] || "";
+    });
+  }
+});
+
 // Global state trackers
 let currentDocId = "";
 let currentRecord = null;
@@ -83,47 +105,83 @@ function setSelectorText(selector, value) {
 }
 
 function populateTemplate(record, verifyUrl) {
-  // Generate QR code safely for all matching container classes
-  const qrContainers = document.querySelectorAll(".pdf-val-qr-container");
-  if (qrContainers.length > 0) {
-    qrContainers.forEach((container) => {
-      container.innerHTML = ""; // Reset container
-      if (typeof QRCode !== "undefined") {
-        new QRCode(container, {
-          text: verifyUrl,
-          width: 100,
-          height: 100,
-          correctLevel: QRCode.CorrectLevel.M,
-        });
-      } else {
-        console.error("QRCode library is not loaded.");
-        container.innerHTML =
-          '<span class="text-xs text-red-500">QR Engine Missing</span>';
-      }
+  // Generate standard image-based QR Code via secure API (Bypasses local canvas rendering bugs)
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
+  const qrImages = document.querySelectorAll(".pdf-val-qr-img");
+  if (qrImages.length > 0) {
+    qrImages.forEach((img) => {
+      img.src = qrImageUrl;
     });
   }
 
   // Populate selectors with safety checks across all elements
   setSelectorText(".pdf-val-doc_id", record.doc_id);
-  setSelectorText(".pdf-val-issue_date", formatDate(record.issue_date));
-  setSelectorText(".pdf-val-expiry_date", formatDate(record.expiry_date));
+
+  // NEW: Populates Designation & Salary Fields
+  setSelectorText(".pdf-val-designation", record.designation);
+  setSelectorText(".pdf-val-salary", record.salary);
+
+  // Updated: Includes time stamp & timezone variables in presentation
+  setSelectorText(
+    ".pdf-val-issue_date",
+    formatDateTime(record.issue_date, record.timezone),
+  );
+  setSelectorText(
+    ".pdf-val-expiry_date",
+    formatDateTime(record.expiry_date, record.timezone),
+  );
   setSelectorText(".pdf-val-certificate_title", record.certificate_title);
 
   setSelectorText(".pdf-val-name", `${record.first_name} ${record.last_name}`);
   setSelectorText(".pdf-val-nationality", record.nationality);
   setSelectorText(".pdf-val-passport", record.passport);
-  setSelectorText(".pdf-val-dob", formatDate(record.dob));
+  setSelectorText(".pdf-val-dob", formatDateLong(record.dob));
 
   setSelectorText(".pdf-val-authority", record.authority);
-  setSelectorText(".pdf-val-issue_date_long", formatDate(record.issue_date));
+  setSelectorText(
+    ".pdf-val-issue_date_long",
+    formatDateTime(record.issue_date, record.timezone),
+  );
   setSelectorText(
     ".pdf-val-expiry_date_long",
-    `Valid Until ${formatDate(record.expiry_date)}`,
+    `Valid Until ${formatDateTime(record.expiry_date, record.timezone)}`,
   );
 }
 
-// Formatters for presentation
-function formatDate(dateString) {
+// New Formatters for detailed DateTime and Timezone presentation
+function formatDateTime(dateTimeString, timezone) {
+  const d = new Date(dateTimeString);
+  if (isNaN(d.getTime())) return dateTimeString;
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  // 12-Hour conversion logic
+  let hours = d.getHours();
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12; // Convert hour '0' to '12'
+  const formattedHours = String(hours).padStart(2, "0");
+
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${day}-${months[d.getMonth()]}-${d.getFullYear()} ${formattedHours}:${minutes} ${ampm} (${timezone})`;
+}
+
+function formatDateLong(dateString) {
   const d = new Date(dateString);
   if (isNaN(d.getTime())) return dateString;
   const day = String(d.getDate()).padStart(2, "0");
@@ -144,18 +202,24 @@ function formatDate(dateString) {
   return `${day}-${months[d.getMonth()]}-${d.getFullYear()}`;
 }
 
-// PDF Generation Options using locked A4 pixel sizes and scroll lockouts
+// PDF Generation Options with dynamic naming rules
 function getHtml2PdfOptions() {
+  // Generates clean, dynamic names based on selected Letter Type (e.g., Appointment_Letter_DOC-2026-A883D1.pdf)
+  const letterTitle =
+    currentRecord && currentRecord.certificate_title
+      ? currentRecord.certificate_title.replace(/\s+/g, "_")
+      : "Letter";
+
   return {
     margin: 0,
-    filename: `certificate_${currentDocId}.pdf`,
+    filename: `${letterTitle}_${currentDocId}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
       scale: 2,
       useCORS: true,
       logging: false,
-      scrollY: 0, // Enforces rendering from absolute top coordinate
-      scrollX: 0, // Enforces rendering from absolute left coordinate
+      scrollY: 0,
+      scrollX: 0,
       width: 794,
       height: 1123,
     },
@@ -168,17 +232,22 @@ function getHtml2PdfOptions() {
   };
 }
 
-// Download PDF directly from the hidden template
+// Download PDF directly from the visible, fully-rendered modal preview
 function triggerPDFDownload() {
-  const element = document.getElementById("pdfRenderingTemplate");
+  // Targets the active, visible sandbox element directly to prevent offscreen rendering issues
+  const element =
+    document.getElementById("clonedPdfTemplate") ||
+    document.getElementById("pdfRenderingTemplate");
   if (element) {
     html2pdf().set(getHtml2PdfOptions()).from(element).save();
   }
 }
 
-// Print PDF
+// Print PDF from the visible, fully-rendered modal preview
 function triggerPDFPrint() {
-  const element = document.getElementById("pdfRenderingTemplate");
+  const element =
+    document.getElementById("clonedPdfTemplate") ||
+    document.getElementById("pdfRenderingTemplate");
   if (element) {
     html2pdf()
       .set(getHtml2PdfOptions())
@@ -228,7 +297,7 @@ async function shareDocument() {
       .set(getHtml2PdfOptions())
       .from(element)
       .outputPdf("blob");
-    const pdfFile = new File([pdfBlob], `certificate_${currentDocId}.pdf`, {
+    const pdfFile = new File([pdfBlob], `letter_${currentDocId}.pdf`, {
       type: "application/pdf",
     });
 
@@ -238,8 +307,8 @@ async function shareDocument() {
 
       await navigator.share({
         files: [pdfFile],
-        title: `Official Statement of Clearance - ${currentDocId}`,
-        text: `Please find the official clearance statement for ${currentRecord.first_name} ${currentRecord.last_name} (ID: ${currentDocId}) attached.\n\nVerify details here: ${currentVerifyUrl}`,
+        title: `Official Letter - ${currentDocId}`,
+        text: `Please find the official letter for ${currentRecord.first_name} ${currentRecord.last_name} (ID: ${currentDocId}) attached.\n\nVerify details here: ${currentVerifyUrl}`,
       });
 
       shareStatus.className =
@@ -259,9 +328,9 @@ async function shareDocument() {
           `Please find the official verification registry details below:\n\n` +
           `Document Reference: ${currentDocId}\n` +
           `Recipient: ${currentRecord.first_name} ${currentRecord.last_name}\n` +
-          `Certificate Title: ${currentRecord.certificate_title}\n` +
+          `Letter Title: ${currentRecord.certificate_title}\n` +
           `Registry Verification Link: ${currentVerifyUrl}\n\n` +
-          `Please attach your downloaded certificate PDF (certificate_${currentDocId}.pdf) to this message before sending.`,
+          `Please attach your downloaded letter PDF (letter_${currentDocId}.pdf) to this message before sending.`,
       );
 
       // Ask user if they want to launch mail client

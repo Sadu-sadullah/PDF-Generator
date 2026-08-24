@@ -136,7 +136,7 @@ if ($record) {
                 <!-- Record Details Layout -->
                 <div class="p-6 space-y-4 text-sm">
                     <div>
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Certificate
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Letter
                             Title</span>
                         <span class="text-slate-100 font-medium">
                             <?php echo htmlspecialchars($record['certificate_title']); ?>
@@ -211,7 +211,7 @@ if ($record) {
                         <?php echo htmlspecialchars($error); ?>
                     </p>
                     <p class="text-[11px] text-slate-500 mt-4 leading-normal">
-                        This could happen if the document reference was manually typed incorrectly or if the certificate has
+                        This could happen if the document reference was manually typed incorrectly or if the letter has
                         been removed from our server registry.
                     </p>
                 </div>

@@ -56,6 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'issue_date' => trim(htmlspecialchars($_POST['issue_date'] ?? date('Y-m-d'))),
         'expiry_date' => trim(htmlspecialchars($_POST['expiry_date'] ?? date('Y-m-d', strtotime('+1 year')))),
         'authority' => trim(htmlspecialchars($_POST['authority'] ?? '')),
+        'designation' => trim(htmlspecialchars($_POST['designation'] ?? '')),
+        'salary' => trim(htmlspecialchars($_POST['salary'] ?? '')),
+        'timezone' => trim(htmlspecialchars($_POST['timezone'] ?? 'UTC')),
         'generated_at' => date('Y-m-d H:i:s')
     ];
 
