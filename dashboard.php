@@ -338,186 +338,303 @@ require_once 'includes/auth.php';
 
 
     <!-- HIDDEN CONTAINER FOR PDF GENERATION LAYOUT (Positioned absolutely off-screen to allow canvas compilation) -->
-    <div
-        style="position: absolute; left: -9999px; top: 0; width: 794px; height: 1123px; overflow: hidden; z-index: -9999;">
+    <div style="position: absolute; left: -9999px; top: 0; width: 794px; overflow: hidden; z-index: -9999;">
 
-        <div id="pdfRenderingTemplate"
-            style="width: 794px; height: 1123px; padding: 45px; background-color: #ffffff; color: #334155; box-sizing: border-box; font-family: 'Helvetica', Arial, sans-serif; position: relative; text-align: left;">
+        <!-- Plain wrapper holding both pages -->
+        <div id="pdfRenderingTemplate">
 
-            <!-- Header Band: Updated to a Mild slate-blue tint background with Logo & QR Code -->
-            <table
-                style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <tr>
-                    <!-- Left: Logo Image Placeholder -->
-                    <td style="padding: 20px; width: 110px; vertical-align: middle; text-align: left;">
-                        <img src="assets/img/company_logo.png"
-                            style="max-height: 45px; max-width: 110px; display: block;" alt="[LOGO]">
-                    </td>
-                    <!-- Middle-Left: Brand Titles -->
-                    <td style="padding: 20px 10px; vertical-align: middle; text-align: left;">
-                        <h1
-                            style="font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
-                            DocuVerify Registry</h1>
-                        <p style="font-size: 10px; color: #64748b; margin: 3px 0 0 0;">Official Statement of Clearance
-                            and Status</p>
-                    </td>
-                    <!-- Right: Metadata & Relocated QR Code -->
-                    <td style="padding: 20px; text-align: right; vertical-align: middle; width: 280px;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td
-                                    style="text-align: right; font-size: 10px; color: #475569; line-height: 1.4; padding-right: 12px; vertical-align: middle;">
-                                    <strong>Doc ID:</strong> <span class="pdf-val-doc_id"
-                                        style="font-family: monospace; font-weight: bold;">---</span><br>
-                                    <strong>Generated:</strong> <span class="pdf-val-issue_date">---</span><br>
-                                    <strong>Expiry:</strong> <span class="pdf-val-expiry_date">---</span>
-                                </td>
-                                <td style="width: 75px; vertical-align: middle; text-align: right;">
-                                    <!-- Replaced with a standard image tag to ensure 100% download capture reliability -->
-                                    <img class="pdf-val-qr-img" src=""
-                                        style="width: 75px; height: 75px; display: block; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; padding: 2px;"
-                                        alt="QR Code">
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-
-            <!-- Body Description -->
-            <table style="width: 100%; border-collapse: collapse; margin-top: 35px;">
-                <tr>
-                    <td style="text-align: left;">
-                        <h2 class="pdf-val-certificate_title"
-                            style="font-size: 20px; font-weight: bold; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin: 0 0 12px 0;">
-                            Certificate</h2>
-                        <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0 0 25px 0;">
-                            This document serves as formal confirmation that the recipient specified below has undergone
-                            verification checks and aligns with validation structures under registered protocol.
-                        </p>
-                    </td>
-                </tr>
-            </table>
-
-            <!-- Section 1: Recipient Table -->
+            <!-- PAGE 1 CONTAINER (Sized to 1110px to prevent micro-pixel pagination overflows) -->
             <div
-                style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px;">
-                1. Recipient Details
-            </div>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b; width: 30%;">Full Name</td>
-                    <td style="padding: 8px 0; color: #0f172a; font-weight: 500;" class="pdf-val-name">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Nationality</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-nationality">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">ID/Passport Number</td>
-                    <td style="padding: 8px 0; color: #0f172a; font-family: monospace; font-weight: bold;"
-                        class="pdf-val-passport">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Date of Birth</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-dob">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Designation</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-designation">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Average Salary</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-salary">---</td>
-                </tr>
-            </table>
+                style="width: 794px; height: 1110px; padding: 45px; background-color: #ffffff; color: #334155; box-sizing: border-box; position: relative; text-align: left; margin: 0 auto; overflow: hidden;">
 
-            <!-- Section 2: Audit Table -->
-            <div
-                style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;">
-                2. Administrative Audit Trail
-            </div>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b; width: 30%;">Issuing Authority</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-authority">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Date of Issue</td>
-                    <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-issue_date_long">---</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Expiration Status</td>
-                    <td style="padding: 8px 0; color: #dc2626; font-weight: bold;" class="pdf-val-expiry_date_long">---
-                    </td>
-                </tr>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Compliance Status</td>
-                    <td style="padding: 8px 0; color: #16a34a; font-weight: bold;">Verified & Approved</td>
-                </tr>
-            </table>
-
-            <!-- Bottom Block: Sized dynamically in standard flow to prevent overlap/clipping -->
-            <table
-                style="width: 100%; border-collapse: collapse; border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 50px;">
-                <tr>
-                    <!-- Left: Security disclaimer -->
-                    <td style="width: 45%; text-align: left; vertical-align: top; padding-right: 15px;">
-                        <div style="font-size: 11.5px; font-weight: bold; color: #0f172a; margin-bottom: 3px;">Registry
-                            Verification Unit</div>
-                        <p style="font-size: 9px; color: #94a3b8; line-height: 1.4; margin: 0;">
-                            <strong>Security Protection Disclaimer:</strong> This is an official document validated
-                            through local system archives. To verify authenticity, scan the associated header QR code.
-                            Direct modification of this document's printed layout compromises valid registration.
-                        </p>
-                    </td>
-                    <!-- Middle: Company Stamp Placeholder Image -->
-                    <td style="width: 25%; text-align: center; vertical-align: middle;">
-                        <div
-                            style="border: 1px dashed #cbd5e1; border-radius: 50%; width: 85px; height: 85px; display: inline-block; line-height: 85px; text-align: center; position: relative;">
-                            <img src="assets/img/seal.png"
-                                style="max-height: 80px; max-width: 80px; position: absolute; top: 2px; left: 2px; opacity: 0.85;"
-                                alt="">
-                            <span
-                                style="font-size: 8px; color: #94a3b8; font-weight: bold; display: block; line-height: 85px;">STAMP
-                                AREA</span>
-                        </div>
-                    </td>
-                    <!-- Right: Signature Placeholder Image -->
-                    <td style="width: 30%; text-align: right; vertical-align: bottom;">
-                        <div style="display: inline-block; text-align: center; width: 140px;">
-                            <div style="text-align: center; margin-bottom: 2px;">
-                                <img src="assets/img/signature.png"
-                                    style="max-height: 45px; max-width: 120px; display: inline-block; vertical-align: bottom;"
-                                    alt="">
-                            </div>
-                            <div style="border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 2px;">
-                                <div style="font-size: 10px; font-weight: bold; color: #0f172a;">Authorized Signatory
-                                </div>
-                                <div style="font-size: 9px; color: #94a3b8;">DocuVerify Secretariat</div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-
-            <!-- Page Footer: Flowed naturally at bottom with a top margin -->
-            <div style="margin-top: 60px;">
+                <!-- Header Band (Page 1) -->
                 <table
-                    style="width: 100%; border-collapse: collapse; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                    style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
                     <tr>
-                        <td style="width: 33%; text-align: left; vertical-align: middle;">
-                            [LEFT FOOTER PLACEHOLDER]
+                        <td style="padding: 20px; width: 110px; vertical-align: middle; text-align: left;">
+                            <img src="assets/img/company_logo.png"
+                                style="max-height: 45px; max-width: 110px; display: block;" alt="[LOGO]">
                         </td>
-                        <td
-                            style="width: 34%; text-align: center; vertical-align: middle; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Page 1 of 1
+                        <td style="padding: 20px 10px; vertical-align: middle; text-align: left;">
+                            <h1
+                                style="font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                                DocuVerify Registry</h1>
+                            <p style="font-size: 10px; color: #64748b; margin: 3px 0 0 0;">Official Statement of
+                                Clearance and Status</p>
                         </td>
-                        <td style="width: 33%; text-align: right; vertical-align: middle;">
-                            [RIGHT FOOTER PLACEHOLDER]
+                        <td style="padding: 20px; text-align: right; vertical-align: middle; width: 280px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td
+                                        style="text-align: right; font-size: 10px; color: #475569; line-height: 1.4; padding-right: 12px; vertical-align: middle;">
+                                        <strong>Doc ID:</strong> <span class="pdf-val-doc_id"
+                                            style="font-family: monospace; font-weight: bold;">---</span><br>
+                                        <strong>Generated:</strong> <span class="pdf-val-issue_date">---</span><br>
+                                        <strong>Expiry:</strong> <span class="pdf-val-expiry_date">---</span>
+                                    </td>
+                                    <td style="width: 75px; vertical-align: middle; text-align: right;">
+                                        <img class="pdf-val-qr-img" src=""
+                                            style="width: 75px; height: 75px; display: block; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; padding: 2px;"
+                                            alt="QR Code">
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
+
+                <!-- Body Title -->
+                <table style="width: 100%; border-collapse: collapse; margin-top: 35px;">
+                    <tr>
+                        <td style="text-align: left;">
+                            <h2 class="pdf-val-certificate_title"
+                                style="font-size: 20px; font-weight: bold; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin: 0 0 12px 0;">
+                                Certificate</h2>
+                            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0 0 25px 0;">
+                                This document serves as formal confirmation that the recipient specified below has
+                                undergone verification checks and aligns with validation structures under registered
+                                protocol.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Section 1: Recipient Table -->
+                <div
+                    style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px;">
+                    1. Recipient Details
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b; width: 30%;">Full Name</td>
+                        <td style="padding: 8px 0; color: #0f172a; font-weight: 500;" class="pdf-val-name">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Nationality</td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-nationality">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">ID/Passport Number</td>
+                        <td style="padding: 8px 0; color: #0f172a; font-family: monospace; font-weight: bold;"
+                            class="pdf-val-passport">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Date of Birth</td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-dob">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Designation</td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-designation">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Average Salary</td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-salary">---</td>
+                    </tr>
+                </table>
+
+                <!-- Section 2: Audit Table -->
+                <div
+                    style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 20px; margin-bottom: 10px;">
+                    2. Administrative Audit Trail
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b; width: 30%;">Issuing Authority
+                        </td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-authority">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Date of Issue</td>
+                        <td style="padding: 8px 0; color: #0f172a;" class="pdf-val-issue_date_long">---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Expiration Status</td>
+                        <td style="padding: 8px 0; color: #dc2626; font-weight: bold;" class="pdf-val-expiry_date_long">
+                            ---</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 0; font-weight: bold; color: #64748b;">Compliance Status</td>
+                        <td style="padding: 8px 0; color: #16a34a; font-weight: bold;">Verified & Approved</td>
+                    </tr>
+                </table>
+
+                <!-- Signatures & Stamp block -->
+                <table
+                    style="width: 100%; border-collapse: collapse; border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 50px;">
+                    <tr>
+                        <td style="width: 45%; text-align: left; vertical-align: top; padding-right: 15px;">
+                            <div style="font-size: 11.5px; font-weight: bold; color: #0f172a; margin-bottom: 3px;">
+                                Registry Verification Unit</div>
+                            <p style="font-size: 9px; color: #94a3b8; line-height: 1.4; margin: 0;">
+                                <strong>Security Protection Disclaimer:</strong> This is an official document validated
+                                through local system archives. To verify authenticity, scan the associated header QR
+                                code. Direct modification of this document's printed layout compromises valid
+                                registration.
+                            </p>
+                        </td>
+                        <td style="width: 25%; text-align: center; vertical-align: middle;">
+                            <div
+                                style="border: 1px dashed #cbd5e1; border-radius: 50%; width: 85px; height: 85px; display: inline-block; line-height: 85px; text-align: center; position: relative;">
+                                <img src="assets/img/seal.png"
+                                    style="max-height: 80px; max-width: 80px; position: absolute; top: 2px; left: 2px; opacity: 0.85;"
+                                    alt="">
+                                <span
+                                    style="font-size: 8px; color: #94a3b8; font-weight: bold; display: block; line-height: 85px;">STAMP
+                                    AREA</span>
+                            </div>
+                        </td>
+                        <td style="width: 30%; text-align: right; vertical-align: bottom;">
+                            <div style="display: inline-block; text-align: center; width: 140px;">
+                                <div style="text-align: center; margin-bottom: 2px;">
+                                    <img src="assets/img/signature.png"
+                                        style="max-height: 45px; max-width: 120px; display: inline-block; vertical-align: bottom;"
+                                        alt="">
+                                </div>
+                                <div style="border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 2px;">
+                                    <div style="font-size: 10px; font-weight: bold; color: #0f172a;">Authorized
+                                        Signatory</div>
+                                    <div style="font-size: 9px; color: #94a3b8;">DocuVerify Secretariat</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Footer (Page 1 of 2) -->
+                <div style="position: absolute; bottom: 35px; left: 45px; right: 45px;">
+                    <table
+                        style="width: 100%; border-collapse: collapse; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <tr>
+                            <td style="width: 33%; text-align: left; vertical-align: middle;">[LEFT FOOTER PLACEHOLDER]
+                            </td>
+                            <td
+                                style="width: 34%; text-align: center; vertical-align: middle; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Page 1 of 2</td>
+                            <td style="width: 33%; text-align: right; vertical-align: middle;">[RIGHT FOOTER
+                                PLACEHOLDER]</td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Page Break Element (Strict CSS rule with zero height to prevent spacing leaks) -->
+            <div class="html2pdf__page-break"
+                style="page-break-before: always; clear: both; height: 0; line-height: 0; font-size: 0; margin: 0; padding: 0; border: none;">
+            </div>
+
+            <!-- PAGE 2 CONTAINER (Sized to 1110px to prevent micro-pixel pagination overflows) -->
+            <div
+                style="width: 794px; height: 1110px; padding: 45px; background-color: #ffffff; color: #334155; box-sizing: border-box; position: relative; text-align: left; margin: 0 auto; overflow: hidden;">
+
+                <!-- Header Band (Page 2) -->
+                <table
+                    style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                    <tr>
+                        <td style="padding: 20px; width: 110px; vertical-align: middle; text-align: left;">
+                            <img src="assets/img/company_logo.png"
+                                style="max-height: 45px; max-width: 110px; display: block;" alt="[LOGO]">
+                        </td>
+                        <td style="padding: 20px 10px; vertical-align: middle; text-align: left;">
+                            <h1
+                                style="font-size: 18px; font-weight: bold; color: #0f172a; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                                DocuVerify Registry</h1>
+                            <p style="font-size: 10px; color: #64748b; margin: 3px 0 0 0;">Official Statement of
+                                Clearance and Status</p>
+                        </td>
+                        <td style="padding: 20px; text-align: right; vertical-align: middle; width: 280px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td
+                                        style="text-align: right; font-size: 10px; color: #475569; line-height: 1.4; padding-right: 12px; vertical-align: middle;">
+                                        <strong>Doc ID:</strong> <span class="pdf-val-doc_id"
+                                            style="font-family: monospace; font-weight: bold;">---</span><br>
+                                        <strong>Generated:</strong> <span class="pdf-val-issue_date">---</span><br>
+                                        <strong>Expiry:</strong> <span class="pdf-val-expiry_date">---</span>
+                                    </td>
+                                    <td style="width: 75px; vertical-align: middle; text-align: right;">
+                                        <img class="pdf-val-qr-img" src=""
+                                            style="width: 75px; height: 75px; display: block; border: 1px solid #cbd5e1; background-color: #ffffff; border-radius: 4px; padding: 2px;"
+                                            alt="QR Code">
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Section Header (Page 2) -->
+                <div
+                    style="font-size: 12px; font-weight: bold; color: #2563eb; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 35px; margin-bottom: 10px;">
+                    Annexure - Terms & Conditions of Employment
+                </div>
+
+                <!-- Page 2 Contents: Annexure Data Rows -->
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.55;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td
+                            style="width: 32%; padding: 10px 0; font-weight: bold; color: #0f172a; vertical-align: top; text-transform: uppercase;">
+                            Period of Employment:</td>
+                        <td style="width: 68%; padding: 10px 0; color: #475569; vertical-align: top;">(2) Two years,
+                            renewable as per mutual agreement.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td
+                            style="width: 32%; padding: 10px 0; font-weight: bold; color: #0f172a; vertical-align: top; text-transform: uppercase;">
+                            Early Termination of Contract:</td>
+                        <td style="width: 68%; padding: 10px 0; color: #475569; vertical-align: top;">If the Employee
+                            resigns before completing the agreed contract period, he shall comply with the UAE Labour
+                            Law, the Company's termination procedures, and the applicable notice period. Any outstanding
+                            obligations, commitments, or dues between the Company and the Employee shall be settled in
+                            accordance with the UAE Labour Law and applicable regulations.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td
+                            style="width: 32%; padding: 10px 0; font-weight: bold; color: #0f172a; vertical-align: top; text-transform: uppercase;">
+                            Probation:</td>
+                        <td style="width: 68%; padding: 10px 0; color: #475569; vertical-align: top;">A period of (6)
+                            months (six months maximum) shall be the probation period during which this contract may be
+                            terminated by the company with a 14 days' written notice and by the employee with a 30 days'
+                            written notice. In the event the employee resigns from the employment relationship for the
+                            purposes of leaving the UAE, such notice will be reduced to 14 days.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td
+                            style="width: 32%; padding: 10px 0; font-weight: bold; color: #0f172a; vertical-align: top; text-transform: uppercase;">
+                            Holiday Entitlement:</td>
+                        <td style="width: 68%; padding: 10px 0; color: #475569; vertical-align: top;">You are entitled
+                            to 30 calendar days of holiday leave per annum, in addition to public holidays as declared
+                            by the government. Due to the nature of the company's business, you may be required to work
+                            on certain public holidays. This is an inherent condition of employment. By accepting this
+                            offer, you acknowledge and agree to work on these days as and when required.</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td
+                            style="width: 32%; padding: 10px 0; font-weight: bold; color: #0f172a; vertical-align: top; text-transform: uppercase;">
+                            Annual Flight:</td>
+                        <td style="width: 68%; padding: 10px 0; color: #475569; vertical-align: top;">After the
+                            successful completion of two (2) years of service, and at the discretion of the company, you
+                            will receive an annual flight ticket to your home country. The company will determine the
+                            airfare for each sector once a year, in accordance with the policy of the company.</td>
+                    </tr>
+                </table>
+
+                <!-- Footer (Page 2 of 2) -->
+                <div style="position: absolute; bottom: 35px; left: 45px; right: 45px;">
+                    <table
+                        style="width: 100%; border-collapse: collapse; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <tr>
+                            <td style="width: 33%; text-align: left; vertical-align: middle;">[LEFT FOOTER PLACEHOLDER]
+                            </td>
+                            <td
+                                style="width: 34%; text-align: center; vertical-align: middle; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Page 2 of 2</td>
+                            <td style="width: 33%; text-align: right; vertical-align: middle;">[RIGHT FOOTER
+                                PLACEHOLDER]</td>
+                        </tr>
+                    </table>
+                </div>
+
             </div>
 
         </div>

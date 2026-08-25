@@ -202,9 +202,8 @@ function formatDateLong(dateString) {
   return `${day}-${months[d.getMonth()]}-${d.getFullYear()}`;
 }
 
-// PDF Generation Options with dynamic naming rules
+// PDF Generation Options (Removes html2canvas height limits to allow multi-page capture)
 function getHtml2PdfOptions() {
-  // Generates clean, dynamic names based on selected Letter Type (e.g., Appointment_Letter_DOC-2026-A883D1.pdf)
   const letterTitle =
     currentRecord && currentRecord.certificate_title
       ? currentRecord.certificate_title.replace(/\s+/g, "_")
@@ -220,15 +219,15 @@ function getHtml2PdfOptions() {
       logging: false,
       scrollY: 0,
       scrollX: 0,
-      width: 794,
-      height: 1123,
+      // Removed: hardcoded width and height limits to allow full multi-page canvas capture
     },
     jsPDF: {
       unit: "px",
-      format: [794, 1123],
+      format: [794, 1123], // Matches individual page layout sizes
       orientation: "portrait",
       hotfixes: ["px_scaling"],
     },
+    pagebreak: { mode: "css" },
   };
 }
 
