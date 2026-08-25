@@ -440,36 +440,38 @@ document.addEventListener("DOMContentLoaded", () => {
   renderArchivePage();
 });
 
-// Tab Switcher Controller
+// Updated: 4-Tab Visibility Switcher with dynamic dropdown options sync
 function switchTab(targetTab) {
-  const tabGen = document.getElementById("tabPanelGenerate");
-  const tabArc = document.getElementById("tabPanelArchive");
-  const btnGen = document.getElementById("tabBtnGenerate");
-  const btnArc = document.getElementById("tabBtnArchive");
+  const panels = {
+    generate: { panel: "tabPanelGenerate", btn: "tabBtnGenerate" },
+    archive: { panel: "tabPanelArchive", btn: "tabBtnArchive" },
+    email: { panel: "tabPanelEmail", btn: "tabBtnEmail" },
+    upload: { panel: "tabPanelUpload", btn: "tabBtnUpload" },
+  };
 
-  if (targetTab === "generate") {
-    tabGen.classList.remove("hidden");
-    tabArc.classList.add("hidden");
+  // Close and reset active elements
+  Object.keys(panels).forEach((key) => {
+    document.getElementById(panels[key].panel).classList.add("hidden");
+    document.getElementById(panels[key].btn).className =
+      "px-3.5 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
+  });
 
-    btnGen.className =
-      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
-    btnArc.className =
-      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
-  } else {
-    tabGen.classList.add("hidden");
-    tabArc.classList.remove("hidden");
+  // Make target panel active
+  document.getElementById(panels[targetTab].panel).classList.remove("hidden");
+  document.getElementById(panels[targetTab].btn).className =
+    "px-3.5 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
 
-    btnGen.className =
-      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
-    btnArc.className =
-      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
-
-    // Refresh values on render trigger
+  // Synchronize records dynamically into target selector dropdowns for Tab C & D
+  if (targetTab === "archive") {
     renderArchivePage();
+  } else if (targetTab === "email") {
+    syncDropdownSelector("dispatcherLetterSelect");
+  } else if (targetTab === "upload") {
+    syncDropdownSelector("uploadLetterSelect");
   }
 }
 
-// Filtration and Query Search Logic
+// Updated: Filtration logic now includes search strings, compliance, types, and target date ranges
 function applyFilters() {
   const searchVal = document
     .getElementById("archiveSearch")
@@ -477,10 +479,17 @@ function applyFilters() {
     .trim();
   const statusVal = document.getElementById("filterStatus").value;
   const typeVal = document.getElementById("filterType").value;
-  const todayStr = new Date().toISOString().split("T")[0]; // Format comparison: YYYY-MM-DD
+
+  // NEW: Calendar variables
+  const dateVal = document.getElementById("filterDate").value; // Returns YYYY-MM-DD
+  const dateRadioType = document.querySelector(
+    'input[name="filterDateType"]:checked',
+  ).value; // 'ISSUE' or 'EXPIRY'
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   filteredRecordsList = activeRecordsList.filter((record) => {
-    // Query check: Doc ID, First Name, Last Name, or Passport ID
+    // Search check
     const matchSearch =
       !searchVal ||
       record.doc_id.toLowerCase().includes(searchVal) ||
@@ -488,7 +497,7 @@ function applyFilters() {
       record.last_name.toLowerCase().includes(searchVal) ||
       record.passport.toLowerCase().includes(searchVal);
 
-    // Status check: Compare active date with expiry date parameters
+    // Status check
     let matchStatus = true;
     const recordExpiry = record.expiry_date.split("T")[0];
 
@@ -501,14 +510,25 @@ function applyFilters() {
     // Letter Type check
     const matchType = typeVal === "ALL" || record.certificate_title === typeVal;
 
-    return matchSearch && matchStatus && matchType;
+    // NEW: Calendar evaluation
+    let matchDate = true;
+    if (dateVal) {
+      // Pick whether we evaluate the record's issue or expiry timestamp
+      const recordTargetDate =
+        dateRadioType === "ISSUE"
+          ? record.issue_date.split("T")[0]
+          : record.expiry_date.split("T")[0];
+      matchDate = recordTargetDate === dateVal;
+    }
+
+    return matchSearch && matchStatus && matchType && matchDate;
   });
 
-  archiveCurrentPage = 1; // Return to page 1 on filter
+  archiveCurrentPage = 1; // Return to page 1 on filter reset
   renderArchivePage();
 }
 
-// Table Renderer Engine
+// Updated: Render function displays short-form abbreviations and new audit date columns
 function renderArchivePage() {
   const tableBody = document.getElementById("recordsTableBody");
   const emptyState = document.getElementById("emptyState");
@@ -533,30 +553,44 @@ function renderArchivePage() {
   tableBody.parentElement.parentElement.classList.remove("hidden");
   emptyState.classList.add("hidden");
 
-  // Slice active index bounds based on pagination
   const startIdx = (archiveCurrentPage - 1) * recordsPerPage;
   const endIdx = Math.min(startIdx + recordsPerPage, totalCount);
   const paginatedSlice = filteredRecordsList.slice(startIdx, endIdx);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // Build row markers
+  // Mappings for compact space saving
+  const typeAbbreviations = {
+    "Appointment Letter": "AL",
+    "Interview Letter": "IL",
+    "Offer Letter": "OL",
+  };
+
   paginatedSlice.forEach((record) => {
     const isRecordValid = record.expiry_date.split("T")[0] >= todayStr;
     const statusBadge = isRecordValid
       ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-100">Valid</span>`
       : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-800 border border-red-100">Expired</span>`;
 
+    // Retrieve shortened type tag
+    const shortType = typeAbbreviations[record.certificate_title] || "LT";
+
     const row = document.createElement("tr");
     row.className = "hover:bg-slate-50/80 transition cursor-pointer group";
-    // Clicking row opens this record directly in the sandbox modal
     row.onclick = () => loadRecordToSandbox(record);
 
     row.innerHTML = `
             <td class="py-4 px-6 font-semibold text-blue-600 font-mono text-xs group-hover:underline">${record.doc_id}</td>
             <td class="py-4 px-6 font-medium text-slate-800">${record.first_name} ${record.last_name}</td>
-            <td class="py-4 px-6 text-slate-500 font-mono text-xs font-medium">${record.passport}</td>
-            <td class="py-4 px-6 text-slate-600">${record.certificate_title}</td>
+            <!-- Compact abbreviation wrapper with helpful browser tooltip on hover -->
+            <td class="py-4 px-6 text-center">
+                <span title="${record.certificate_title}" class="cursor-help inline-flex items-center justify-center px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition">
+                    ${shortType}
+                </span>
+            </td>
+            <!-- New: Audited Issue and Expiry Columns -->
+            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.issue_date.split("T")[0])}</td>
+            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.expiry_date.split("T")[0])}</td>
             <td class="py-4 px-6">${statusBadge}</td>
             <td class="py-4 px-6 text-right">
                 <button class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 py-1.5 px-3 rounded-lg transition shadow-sm">
@@ -568,7 +602,6 @@ function renderArchivePage() {
     tableBody.appendChild(row);
   });
 
-  // Update pagination descriptors
   paginationInfo.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${totalCount} entries`;
   prevBtn.disabled = archiveCurrentPage === 1;
   nextBtn.disabled = endIdx >= totalCount;
@@ -626,3 +659,194 @@ function loadRecordToSandbox(record) {
 
   openModal();
 }
+
+// Synchronizes actual database records into target <select> dropdown inputs
+function syncDropdownSelector(dropdownId) {
+  const selector = document.getElementById(dropdownId);
+  if (!selector) return;
+
+  // Reset dropdown container option states
+  selector.innerHTML = '<option value="">Select a generated letter...</option>';
+
+  // Loop through dynamic local database to append options
+  activeRecordsList.forEach((record) => {
+    const option = document.createElement("option");
+    option.value = record.doc_id;
+    option.textContent = `${record.doc_id} - ${record.first_name} ${record.last_name} (${record.certificate_title})`;
+    selector.appendChild(option);
+  });
+}
+
+// Auto-populates inputs inside the dispatcher panel based on selected Letter ID
+function autoFillEmailRecipient() {
+  const letterSelect = document.getElementById("dispatcherLetterSelect");
+  const emailTo = document.getElementById("dispatcherTo");
+  const emailSubject = document.getElementById("dispatcherSubject");
+  const emailMessage = document.getElementById("dispatcherMessage");
+
+  if (!letterSelect || !emailTo || !emailSubject || !emailMessage) return;
+
+  const selectedDocId = letterSelect.value;
+  const record = activeRecordsList.find((r) => r.doc_id === selectedDocId);
+
+  if (record) {
+    emailTo.value = record.email;
+    emailSubject.value = `Official Document Statement - ${record.doc_id}`;
+    emailMessage.value =
+      `Dear ${record.first_name} ${record.last_name},\n\n` +
+      `Please find the official registered statement details below:\n\n` +
+      `- Letter Type: ${record.certificate_title}\n` +
+      `- Reference ID: ${record.doc_id}\n` +
+      `- Issuing Company: ${record.authority}\n\n` +
+      `Verify document status here: http://${window.location.host}/verify.php?doc_id=${record.doc_id}\n\n` +
+      `Best regards,\n` +
+      `DocuVerify Secretariat Unit`;
+  } else {
+    emailTo.value = "";
+    emailSubject.value = "";
+    emailMessage.value = "";
+  }
+}
+
+// Updates custom file input label elements with selected filenames on browse
+function updateFileLabel(slotKey) {
+  const fileInput = document.getElementById(`file_${slotKey}`);
+  const fileLabel = document.getElementById(`label_${slotKey}`);
+
+  if (fileInput && fileLabel) {
+    if (fileInput.files.length > 0) {
+      fileLabel.textContent = fileInput.files[0].name;
+      fileLabel.className = "truncate pr-2 text-slate-800 font-semibold";
+    } else {
+      fileLabel.textContent = "Choose file...";
+      fileLabel.className = "truncate pr-2 text-slate-400";
+    }
+  }
+}
+
+// Mock Email Dispatcher Handler (Frontend mock for Tab C)
+function sendDispatcherEmail(e) {
+  e.preventDefault();
+
+  const submitBtn = document.getElementById("dispatcherSubmitBtn");
+  const btnText = document.getElementById("dispatcherBtnText");
+  const spinner = document.getElementById("dispatcherSpinner");
+  const status = document.getElementById("dispatcherEmailStatus");
+
+  if (!submitBtn || !status) return;
+
+  submitBtn.disabled = true;
+  spinner.classList.remove("hidden");
+  btnText.textContent = "Dispatching...";
+  status.className = "text-[10px] font-semibold text-blue-600 mt-2";
+  status.textContent =
+    "Connecting to SMTP relay server & compiling attachments...";
+  status.classList.remove("hidden");
+
+  setTimeout(() => {
+    status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
+    status.textContent = "Transaction successfully executed. Email dispatched.";
+    spinner.classList.add("hidden");
+    btnText.textContent = "Dispatch Email";
+
+    setTimeout(() => {
+      document.getElementById("dispatcherEmailForm").reset();
+      status.classList.add("hidden");
+      submitBtn.disabled = false;
+    }, 1500);
+  }, 2000);
+}
+
+// Mock Supportive Document Upload Handler (Frontend mock for Tab D)
+function uploadSupportiveDocs(e) {
+  e.preventDefault();
+
+  const submitBtn = document.getElementById("uploadSubmitBtn");
+  const btnText = document.getElementById("uploadBtnText");
+  const spinner = document.getElementById("uploadSpinner");
+  const status = document.getElementById("uploadStatus");
+
+  if (!submitBtn || !status) return;
+
+  submitBtn.disabled = true;
+  spinner.classList.remove("hidden");
+  btnText.textContent = "Uploading Files...";
+  status.className = "text-[10px] font-semibold text-blue-600 mt-2";
+  status.textContent =
+    "Uploading payload files to 'data/' folder & mapping references...";
+  status.classList.remove("hidden");
+
+  setTimeout(() => {
+    status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
+    status.textContent =
+      "Supportive credentials successfully associated and stored on server.";
+    spinner.classList.add("hidden");
+    btnText.textContent = "Upload Documents";
+
+    setTimeout(() => {
+      document.getElementById("supportiveDocsForm").reset();
+
+      // Clear browse names
+      ["passport", "national_id", "degree", "cv", "employment"].forEach(
+        (key) => {
+          const label = document.getElementById(`label_${key}`);
+          if (label) {
+            label.textContent = "Choose file...";
+            label.className = "truncate pr-2 text-slate-400";
+          }
+        },
+      );
+
+      status.classList.add("hidden");
+      submitBtn.disabled = false;
+    }, 1500);
+  }, 2000);
+}
+
+// Utility: Resets the calendar filter element
+function clearDateFilter() {
+  const calendar = document.getElementById("filterDate");
+  if (calendar) {
+    calendar.value = "";
+    applyFilters();
+  }
+}
+
+// ==========================================
+// DRAG-TO-SCROLL HORIZONTAL SELECTOR ENGINE
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+  const slider = document.getElementById("scrollableTabSelector");
+  if (!slider) return;
+
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  // Mouse Down - User grabs the container
+  slider.addEventListener("mousedown", (e) => {
+    isDown = true;
+    startX = e.pageX - slider.offsetLeft;
+    scrollLeft = slider.scrollLeft;
+  });
+
+  // Mouse Leave - User moves pointer outside boundaries
+  slider.addEventListener("mouseleave", () => {
+    isDown = false;
+  });
+
+  // Mouse Up - User releases the grab
+  slider.addEventListener("mouseup", () => {
+    isDown = false;
+  });
+
+  // Mouse Move - Executes horizontal page scroll based on grab momentum
+  slider.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault(); // Prevents highlight selection bugs during drag
+
+    const x = e.pageX - slider.offsetLeft;
+    const walk = (x - startX) * 1.8; // Scroll multiplier speed
+    slider.scrollLeft = scrollLeft - walk;
+  });
+});

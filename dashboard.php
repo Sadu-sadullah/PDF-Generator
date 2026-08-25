@@ -61,24 +61,38 @@ require_once 'includes/auth.php';
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="max-w-4xl mx-auto">
 
-            <!-- Page Header & Tab Selector -->
+            <!-- Premium Non-Wrapping Scrollable Tab Switcher -->
             <div
-                class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5 mb-8">
-                <div>
+                class="flex flex-col xl:flex-row xl:items-center xl:justify-between border-b border-slate-200 pb-5 mb-8">
+                <div class="mb-4 xl:mb-0">
                     <h2 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVerify Console</h2>
-                    <p class="text-sm text-slate-500 mt-1">Manage compliance, print letters, and monitor audit
-                        databases.</p>
+                    <p class="text-sm text-slate-500 mt-1">Manage compliance letters, attach supportive files, and
+                        dispatch records.</p>
                 </div>
-                <!-- Premium Tab Switcher -->
-                <div
-                    class="flex space-x-1 bg-slate-200/60 p-1 rounded-xl mt-4 sm:mt-0 shadow-sm border border-slate-200">
+                <!-- Horizontal scrolling tab container (Now grab-draggable & scrollable) -->
+                <div id="scrollableTabSelector"
+                    class="w-full xl:w-auto overflow-x-auto whitespace-nowrap bg-slate-200/60 p-1 rounded-xl border border-slate-200 shadow-sm flex no-scrollbar select-none cursor-grab active:cursor-grabbing"
+                    style="-ms-overflow-style: none; scrollbar-width: none; user-select: none;">
+                    <style>
+                        .no-scrollbar::-webkit-scrollbar {
+                            display: none;
+                        }
+                    </style>
                     <button id="tabBtnGenerate" onclick="switchTab('generate')"
-                        class="px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
+                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
                         Generate New
                     </button>
                     <button id="tabBtnArchive" onclick="switchTab('archive')"
-                        class="px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
-                        Letters Archive
+                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        Archived Letters
+                    </button>
+                    <button id="tabBtnEmail" onclick="switchTab('email')"
+                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        Email Dispatcher
+                    </button>
+                    <button id="tabBtnUpload" onclick="switchTab('upload')"
+                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        Supportive Docs
                     </button>
                 </div>
             </div>
@@ -261,15 +275,15 @@ require_once 'includes/auth.php';
 
             <!-- TAB B: Letters Archive Archive -->
             <div id="tabPanelArchive" class="hidden space-y-6">
-                <!-- Search & Filters Block -->
+                <!-- Updated: Search, Status, Type, and Date Range filter selectors -->
                 <div
-                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <!-- Search Input -->
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Search
                             Records</label>
                         <input type="text" id="archiveSearch" oninput="applyFilters()"
-                            placeholder="Doc ID, Name, or Passport..."
+                            placeholder="Doc ID, Name, Passport..."
                             class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                     </div>
                     <!-- Status Filter -->
@@ -294,6 +308,35 @@ require_once 'includes/auth.php';
                             <option value="Interview Letter">Interview Letter</option>
                         </select>
                     </div>
+                    <!-- NEW: Date filtration and radio button parameters -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Filter by
+                            Date</label>
+                        <div class="relative flex items-center">
+                            <input type="date" id="filterDate" onchange="applyFilters()"
+                                class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <button type="button" onclick="clearDateFilter()"
+                                class="absolute right-1.5 text-slate-400 hover:text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded text-xs transition"
+                                title="Clear Calendar Filter">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-3 pt-0.5">
+                            <label
+                                class="inline-flex items-center text-[11px] font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="filterDateType" value="ISSUE" checked
+                                    onchange="applyFilters()"
+                                    class="w-3 h-3 text-blue-600 border-slate-300 focus:ring-blue-500 mr-1">
+                                Issued On
+                            </label>
+                            <label
+                                class="inline-flex items-center text-[11px] font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="filterDateType" value="EXPIRY" onchange="applyFilters()"
+                                    class="w-3 h-3 text-blue-600 border-slate-300 focus:ring-blue-500 mr-1">
+                                Expiring On
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Responsive Archive Table -->
@@ -305,9 +348,10 @@ require_once 'includes/auth.php';
                                     class="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                                     <th class="py-4 px-6">Doc ID</th>
                                     <th class="py-4 px-6">Recipient Name</th>
-                                    <th class="py-4 px-6">Passport ID</th>
-                                    <th class="py-4 px-6">Letter Type</th>
-                                    <th class="py-4 px-6">Expiry Status</th>
+                                    <th class="py-4 px-6 text-center">Type</th> <!-- Sized down column -->
+                                    <th class="py-4 px-6">Issued Date</th> <!-- New column -->
+                                    <th class="py-4 px-6">Expiry Date</th> <!-- New column -->
+                                    <th class="py-4 px-6">Status</th>
                                     <th class="py-4 px-6 text-right">Preview</th>
                                 </tr>
                             </thead>
@@ -344,6 +388,192 @@ require_once 'includes/auth.php';
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- TAB C: Dedicated Built-In Email Dispatcher Panel -->
+            <div id="tabPanelEmail" class="hidden space-y-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">System Mail Dispatcher
+                        </h3>
+                    </div>
+
+                    <form id="dispatcherEmailForm" onsubmit="sendDispatcherEmail(event)" class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select
+                                Letter to Attach</label>
+                            <select id="dispatcherLetterSelect" onchange="autoFillEmailRecipient()" required
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <option value="">Select a generated letter...</option>
+                                <!-- JS Dynamically Populated Option List -->
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Recipient
+                                    Email (To)</label>
+                                <input type="email" id="dispatcherTo" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Subject</label>
+                                <input type="text" id="dispatcherSubject" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Message
+                                Body</label>
+                            <textarea id="dispatcherMessage" rows="8" required
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
+                        </div>
+
+                        <!-- Dynamic Attachment Toggle Indicator -->
+                        <div class="flex items-center space-x-3 bg-blue-50 border border-blue-100 rounded-xl p-3.5">
+                            <input type="checkbox" id="dispatcherAttachCheck" checked
+                                class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <div>
+                                <span class="block text-xs font-semibold text-blue-800">Attach Selected PDF
+                                    Document</span>
+                                <span class="block text-[10px] text-blue-500 -mt-0.5">The system will compile and attach
+                                    the letter PDF as an attachment automatically</span>
+                            </div>
+                        </div>
+
+                        <p id="dispatcherEmailStatus" class="hidden text-[10px] font-semibold text-blue-600"></p>
+
+                        <div class="text-right border-t border-slate-100 pt-4">
+                            <button type="submit" id="dispatcherSubmitBtn"
+                                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="dispatcherBtnText">Dispatch Email</span>
+                                <svg id="dispatcherSpinner" class="hidden animate-spin ml-2 h-3.5 w-3.5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB D: Dedicated Supportive Documents Upload Panel -->
+            <div id="tabPanelUpload" class="hidden space-y-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Upload Supportive
+                            Documents</h3>
+                    </div>
+
+                    <form id="supportiveDocsForm" onsubmit="uploadSupportiveDocs(event)" enctype="multipart/form-data"
+                        class="p-6 space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Select
+                                Target Generated Letter</label>
+                            <select id="uploadLetterSelect" required
+                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <option value="">Select a generated letter...</option>
+                                <!-- JS Dynamically Populated Option List -->
+                            </select>
+                        </div>
+
+                        <!-- Responsive File Upload Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+                            <!-- Slot 1: Passport -->
+                            <div
+                                class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+                                <span class="block text-xs font-bold text-slate-700 mb-2">1. Passport Copy</span>
+                                <input type="file" name="support_passport" id="file_passport"
+                                    onchange="updateFileLabel('passport')" class="hidden">
+                                <label for="file_passport"
+                                    class="inline-flex items-center justify-between w-full px-3 py-2.5 border border-slate-200 bg-white rounded-lg cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-600 transition">
+                                    <span id="label_passport" class="truncate pr-2">Choose file...</span>
+                                    <span class="text-blue-600 font-semibold shrink-0">Browse</span>
+                                </label>
+                            </div>
+
+                            <!-- Slot 2: National ID -->
+                            <div
+                                class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+                                <span class="block text-xs font-bold text-slate-700 mb-2">2. National ID / Residence
+                                    Visa</span>
+                                <input type="file" name="support_national_id" id="file_national_id"
+                                    onchange="updateFileLabel('national_id')" class="hidden">
+                                <label for="file_national_id"
+                                    class="inline-flex items-center justify-between w-full px-3 py-2.5 border border-slate-200 bg-white rounded-lg cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-600 transition">
+                                    <span id="label_national_id" class="truncate pr-2">Choose file...</span>
+                                    <span class="text-blue-600 font-semibold shrink-0">Browse</span>
+                                </label>
+                            </div>
+
+                            <!-- Slot 3: Academic Degree -->
+                            <div
+                                class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+                                <span class="block text-xs font-bold text-slate-700 mb-2">3. Academic Degree /
+                                    Certificates</span>
+                                <input type="file" name="support_degree" id="file_degree"
+                                    onchange="updateFileLabel('degree')" class="hidden">
+                                <label for="file_degree"
+                                    class="inline-flex items-center justify-between w-full px-3 py-2.5 border border-slate-200 bg-white rounded-lg cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-600 transition">
+                                    <span id="label_degree" class="truncate pr-2">Choose file...</span>
+                                    <span class="text-blue-600 font-semibold shrink-0">Browse</span>
+                                </label>
+                            </div>
+
+                            <!-- Slot 4: CV -->
+                            <div
+                                class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between">
+                                <span class="block text-xs font-bold text-slate-700 mb-2">4. Curriculum Vitae
+                                    (CV)</span>
+                                <input type="file" name="support_cv" id="file_cv" onchange="updateFileLabel('cv')"
+                                    class="hidden">
+                                <label for="file_cv"
+                                    class="inline-flex items-center justify-between w-full px-3 py-2.5 border border-slate-200 bg-white rounded-lg cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-600 transition">
+                                    <span id="label_cv" class="truncate pr-2">Choose file...</span>
+                                    <span class="text-blue-600 font-semibold shrink-0">Browse</span>
+                                </label>
+                            </div>
+
+                            <!-- Slot 5: Employment Proof -->
+                            <div
+                                class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between md:col-span-2">
+                                <span class="block text-xs font-bold text-slate-700 mb-2">5. Previous Employment
+                                    Certificate</span>
+                                <input type="file" name="support_employment" id="file_employment"
+                                    onchange="updateFileLabel('employment')" class="hidden">
+                                <label for="file_employment"
+                                    class="inline-flex items-center justify-between w-full px-3 py-2.5 border border-slate-200 bg-white rounded-lg cursor-pointer hover:bg-slate-50 text-xs font-medium text-slate-600 transition">
+                                    <span id="label_employment" class="truncate pr-2">Choose file...</span>
+                                    <span class="text-blue-600 font-semibold shrink-0">Browse</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <p id="uploadStatus" class="hidden text-[10px] font-semibold text-blue-600"></p>
+
+                        <!-- Submit Upload button -->
+                        <div class="text-right border-t border-slate-100 pt-4">
+                            <button type="submit" id="uploadSubmitBtn"
+                                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="uploadBtnText">Upload Documents</span>
+                                <svg id="uploadSpinner" class="hidden animate-spin ml-2 h-3.5 w-3.5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
