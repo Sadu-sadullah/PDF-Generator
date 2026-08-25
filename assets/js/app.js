@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 let currentDocId = "";
 let currentRecord = null;
 let currentVerifyUrl = "";
+let isNewLetterGenerated = false;
 
 document
   .getElementById("certificateForm")
@@ -57,6 +58,8 @@ document
         currentDocId = resData.doc_id;
         currentRecord = resData.data;
         currentVerifyUrl = resData.verify_url;
+
+        isNewLetterGenerated = true; // NEW: Set flag to true on successful creation
 
         // 1. First clone the hidden template into the modal canvas area
         const previewArea = document.getElementById("visualPreviewArea");
@@ -268,6 +271,7 @@ function openModal() {
   }
 }
 
+// Modal Handlers
 function closeModal() {
   const modal = document.getElementById("previewModal");
   if (modal) {
@@ -275,6 +279,12 @@ function closeModal() {
     document.body.style.overflow = "";
     const status = document.getElementById("emailStatus");
     if (status) status.classList.add("hidden");
+
+    // NEW: If a new letter was just created, reload to empty inputs & refresh archive table
+    if (isNewLetterGenerated) {
+      isNewLetterGenerated = false; // Reset tracker
+      window.location.reload();
+    }
   }
 }
 
@@ -349,4 +359,208 @@ async function shareDocument() {
     shareStatus.className = "text-[10px] mt-1.5 text-red-500 font-semibold";
     shareStatus.textContent = "Sharing cancelled or failed.";
   }
+}
+
+// ==========================================
+// ARCHIVE LOOKUP, FILTRATION & PAGINATION ENGINE
+// ==========================================
+
+// Global State Variables for Archive
+let activeRecordsList = [];
+let filteredRecordsList = [];
+let archiveCurrentPage = 1;
+const recordsPerPage = 10;
+
+// Initialize Archive Engine on DOM Load
+document.addEventListener("DOMContentLoaded", () => {
+  // Populate active database list from server-injected script
+  if (typeof databaseInjectedRecords !== "undefined") {
+    activeRecordsList = Object.values(databaseInjectedRecords).reverse(); // Newest first
+  }
+  filteredRecordsList = [...activeRecordsList];
+  renderArchivePage();
+});
+
+// Tab Switcher Controller
+function switchTab(targetTab) {
+  const tabGen = document.getElementById("tabPanelGenerate");
+  const tabArc = document.getElementById("tabPanelArchive");
+  const btnGen = document.getElementById("tabBtnGenerate");
+  const btnArc = document.getElementById("tabBtnArchive");
+
+  if (targetTab === "generate") {
+    tabGen.classList.remove("hidden");
+    tabArc.classList.add("hidden");
+
+    btnGen.className =
+      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
+    btnArc.className =
+      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
+  } else {
+    tabGen.classList.add("hidden");
+    tabArc.classList.remove("hidden");
+
+    btnGen.className =
+      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
+    btnArc.className =
+      "px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
+
+    // Refresh values on render trigger
+    renderArchivePage();
+  }
+}
+
+// Filtration and Query Search Logic
+function applyFilters() {
+  const searchVal = document
+    .getElementById("archiveSearch")
+    .value.toLowerCase()
+    .trim();
+  const statusVal = document.getElementById("filterStatus").value;
+  const typeVal = document.getElementById("filterType").value;
+  const todayStr = new Date().toISOString().split("T")[0]; // Format comparison: YYYY-MM-DD
+
+  filteredRecordsList = activeRecordsList.filter((record) => {
+    // Query check: Doc ID, First Name, Last Name, or Passport ID
+    const matchSearch =
+      !searchVal ||
+      record.doc_id.toLowerCase().includes(searchVal) ||
+      record.first_name.toLowerCase().includes(searchVal) ||
+      record.last_name.toLowerCase().includes(searchVal) ||
+      record.passport.toLowerCase().includes(searchVal);
+
+    // Status check: Compare active date with expiry date parameters
+    let matchStatus = true;
+    const recordExpiry = record.expiry_date.split("T")[0];
+
+    if (statusVal === "VALID") {
+      matchStatus = recordExpiry >= todayStr;
+    } else if (statusVal === "EXPIRED") {
+      matchStatus = recordExpiry < todayStr;
+    }
+
+    // Letter Type check
+    const matchType = typeVal === "ALL" || record.certificate_title === typeVal;
+
+    return matchSearch && matchStatus && matchType;
+  });
+
+  archiveCurrentPage = 1; // Return to page 1 on filter
+  renderArchivePage();
+}
+
+// Table Renderer Engine
+function renderArchivePage() {
+  const tableBody = document.getElementById("recordsTableBody");
+  const emptyState = document.getElementById("emptyState");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const paginationInfo = document.getElementById("paginationInfo");
+
+  if (!tableBody) return;
+
+  tableBody.innerHTML = "";
+  const totalCount = filteredRecordsList.length;
+
+  if (totalCount === 0) {
+    tableBody.parentElement.parentElement.classList.add("hidden");
+    emptyState.classList.remove("hidden");
+    paginationInfo.textContent = "Showing 0 to 0 of 0 entries";
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    return;
+  }
+
+  tableBody.parentElement.parentElement.classList.remove("hidden");
+  emptyState.classList.add("hidden");
+
+  // Slice active index bounds based on pagination
+  const startIdx = (archiveCurrentPage - 1) * recordsPerPage;
+  const endIdx = Math.min(startIdx + recordsPerPage, totalCount);
+  const paginatedSlice = filteredRecordsList.slice(startIdx, endIdx);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  // Build row markers
+  paginatedSlice.forEach((record) => {
+    const isRecordValid = record.expiry_date.split("T")[0] >= todayStr;
+    const statusBadge = isRecordValid
+      ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-100">Valid</span>`
+      : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-800 border border-red-100">Expired</span>`;
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-slate-50/80 transition cursor-pointer group";
+    // Clicking row opens this record directly in the sandbox modal
+    row.onclick = () => loadRecordToSandbox(record);
+
+    row.innerHTML = `
+            <td class="py-4 px-6 font-semibold text-blue-600 font-mono text-xs group-hover:underline">${record.doc_id}</td>
+            <td class="py-4 px-6 font-medium text-slate-800">${record.first_name} ${record.last_name}</td>
+            <td class="py-4 px-6 text-slate-500 font-mono text-xs font-medium">${record.passport}</td>
+            <td class="py-4 px-6 text-slate-600">${record.certificate_title}</td>
+            <td class="py-4 px-6">${statusBadge}</td>
+            <td class="py-4 px-6 text-right">
+                <button class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 py-1.5 px-3 rounded-lg transition shadow-sm">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Preview
+                </button>
+            </td>
+        `;
+    tableBody.appendChild(row);
+  });
+
+  // Update pagination descriptors
+  paginationInfo.textContent = `Showing ${startIdx + 1} to ${endIdx} of ${totalCount} entries`;
+  prevBtn.disabled = archiveCurrentPage === 1;
+  nextBtn.disabled = endIdx >= totalCount;
+}
+
+// Pagination Controls
+function prevPage() {
+  if (archiveCurrentPage > 1) {
+    archiveCurrentPage--;
+    renderArchivePage();
+  }
+}
+
+function nextPage() {
+  const totalCount = filteredRecordsList.length;
+  if (archiveCurrentPage * recordsPerPage < totalCount) {
+    archiveCurrentPage++;
+    renderArchivePage();
+  }
+}
+
+// Loads selected database records directly into sandbox template & opens modal
+function loadRecordToSandbox(record) {
+  currentDocId = record.doc_id;
+  currentRecord = record;
+
+  // Synthesize verify URL for selected archive item
+  const protocol =
+    window.location.protocol === "https:" ? "https://" : "http://";
+  currentVerifyUrl = `${protocol}${window.location.host}${window.location.pathname.replace("dashboard.php", "verify.php")}?doc_id=${currentDocId}`;
+
+  // 1. First clone the hidden template into the modal canvas area
+  const previewArea = document.getElementById("visualPreviewArea");
+  const templateSrc = document.getElementById("pdfRenderingTemplate");
+
+  if (previewArea && templateSrc) {
+    const templateClone = templateSrc.cloneNode(true);
+    templateClone.id = "clonedPdfTemplate";
+    previewArea.innerHTML = "";
+    previewArea.appendChild(templateClone);
+  }
+
+  // 2. Populate cloned version inside the DOM
+  populateTemplate(currentRecord, currentVerifyUrl);
+
+  // 3. Populate Modal text elements
+  const modalDocIdEl = document.getElementById("modalDocId");
+  if (modalDocIdEl) modalDocIdEl.textContent = `Doc ID: ${currentDocId}`;
+
+  const targetEmailEl = document.getElementById("targetEmail");
+  if (targetEmailEl) targetEmailEl.value = currentRecord.email;
+
+  openModal();
 }

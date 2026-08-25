@@ -57,190 +57,296 @@ require_once 'includes/auth.php';
         </div>
     </header>
 
-    <!-- Main Workspace Container -->
+    <!-- Main Workspace Container (Tabbed Layout) -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="max-w-3xl mx-auto">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Generate Letters</h2>
-                <p class="text-sm text-slate-500 mt-1">Input the records below to generate a validated, QR-secured PDF
-                    letter.</p>
-            </div>
+        <div class="max-w-4xl mx-auto">
 
-            <form id="certificateForm" class="space-y-6">
-                <!-- Section 1: Recipient Information -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">1. Personal
-                            Information</h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">First
-                                Name</label>
-                            <input type="text" name="first_name" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Last
-                                Name</label>
-                            <input type="text" name="last_name" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Nationality</label>
-                            <select name="nationality" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                <option value="">Select nationality...</option>
-                                <option value="United States">United States</option>
-                                <option value="United Kingdom">United Kingdom</option>
-                                <option value="Germany">Germany</option>
-                                <option value="France">France</option>
-                                <option value="Canada">Canada</option>
-                                <option value="Australia">Australia</option>
-                                <option value="Singapore">Singapore</option>
-                                <option value="United Arab Emirates">United Arab Emirates</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Passport
-                                / National ID Number</label>
-                            <input type="text" name="passport" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                placeholder="e.g., A12345678">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Date
-                                of Birth</label>
-                            <input type="date" name="dob" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Designation</label>
-                            <select name="designation" id="designationSelect" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                <option value="">Select Designation...</option>
-                                <option value="Software Engineer">Software Engineer</option>
-                                <option value="Project Manager">Project Manager</option>
-                                <option value="Data Analyst">Data Analyst</option>
-                                <option value="Financial Consultant">Financial Consultant</option>
-                                <option value="HR Specialist">HR Specialist</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Average
-                                Salary (USD)</label>
-                            <input type="text" name="salary" id="salaryInput" readonly
-                                class="w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 focus:outline-none cursor-not-allowed"
-                                placeholder="$0.00">
-                        </div>
-                    </div>
+            <!-- Page Header & Tab Selector -->
+            <div
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVerify Console</h2>
+                    <p class="text-sm text-slate-500 mt-1">Manage compliance, print letters, and monitor audit
+                        databases.</p>
                 </div>
-
-                <!-- Section 2: Contact Details -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">2. Contact Details
-                        </h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Phone
-                                Number</label>
-                            <input type="tel" name="phone" placeholder="+1 234 567 8900" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Email
-                                Address</label>
-                            <input type="email" name="email" placeholder="recipient@domain.com" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 3: Document Metadata -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">3. Document Metadata
-                        </h3>
-                    </div>
-                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
-                                Type
-                                Title</label>
-                            <select name="certificate_title" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                <option value="Appointment Letter">Appointment Letter</option>
-                                <option value="Interview Letter">Interview Letter</option>
-                                </option>
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Issue
-                                Date & Time</label>
-                            <input type="datetime-local" name="issue_date" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                value="<?php echo date('Y-m-d\TH:i'); ?>">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Expiry
-                                Date & Time</label>
-                            <input type="datetime-local" name="expiry_date" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                value="<?php echo date('Y-m-d\TH:i', strtotime('+1 year')); ?>">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Timezone</label>
-                            <select name="timezone" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                                <option value="UTC">UTC (Coordinated Universal Time / UTC+0)</option>
-                                <option value="EST">EST (Eastern Standard Time / UTC-5)</option>
-                                <option value="GMT">GMT (Greenwich Mean Time / UTC+0)</option>
-                                <option value="SGT">SGT (Singapore Time / UTC+8)</option>
-                                <option value="GST">GST (Gulf Standard Time / UTC+4)</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label
-                                class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
-                                Issuing
-                                Company</label>
-                            <input type="text" name="authority" required
-                                class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                placeholder="e.g., Department of Compliance">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-right">
-                    <button type="submit" id="submitBtn"
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-8 py-3 rounded-xl transition duration-200 shadow-md">
-                        <span id="btnText">Generate Digital Document</span>
-                        <svg id="btnSpinner" class="hidden animate-spin ml-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
+                <!-- Premium Tab Switcher -->
+                <div
+                    class="flex space-x-1 bg-slate-200/60 p-1 rounded-xl mt-4 sm:mt-0 shadow-sm border border-slate-200">
+                    <button id="tabBtnGenerate" onclick="switchTab('generate')"
+                        class="px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
+                        Generate New
+                    </button>
+                    <button id="tabBtnArchive" onclick="switchTab('archive')"
+                        class="px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        Letters Archive
                     </button>
                 </div>
-            </form>
+            </div>
+
+            <!-- TAB A: Generation Form -->
+            <div id="tabPanelGenerate" class="space-y-6">
+                <form id="certificateForm" class="space-y-6">
+                    <!-- Section 1: Recipient Information -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">1. Personal
+                                Information</h3>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">First
+                                    Name</label>
+                                <input type="text" name="first_name" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Last
+                                    Name</label>
+                                <input type="text" name="last_name" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Nationality</label>
+                                <select name="nationality" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                    <option value="">Select nationality...</option>
+                                    <option value="United States">United States</option>
+                                    <option value="United Kingdom">United Kingdom</option>
+                                    <option value="Germany">Germany</option>
+                                    <option value="France">France</option>
+                                    <option value="Canada">Canada</option>
+                                    <option value="Australia">Australia</option>
+                                    <option value="Singapore">Singapore</option>
+                                    <option value="United Arab Emirates">United Arab Emirates</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Passport
+                                    / National ID Number</label>
+                                <input type="text" name="passport" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    placeholder="e.g., A12345678">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Date
+                                    of Birth</label>
+                                <input type="date" name="dob" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Designation</label>
+                                <select name="designation" id="designationSelect" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                    <option value="">Select Designation...</option>
+                                    <option value="Software Engineer">Software Engineer</option>
+                                    <option value="Project Manager">Project Manager</option>
+                                    <option value="Data Analyst">Data Analyst</option>
+                                    <option value="Financial Consultant">Financial Consultant</option>
+                                    <option value="HR Specialist">HR Specialist</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Average
+                                    Salary (USD)</label>
+                                <input type="text" name="salary" id="salaryInput" readonly
+                                    class="w-full px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 focus:outline-none cursor-not-allowed"
+                                    placeholder="$0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Contact Details -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">2. Contact Details
+                            </h3>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Phone
+                                    Number</label>
+                                <input type="tel" name="phone" placeholder="+1 234 567 8900" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Email
+                                    Address</label>
+                                <input type="email" name="email" placeholder="recipient@domain.com" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Document Metadata -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">3. Document
+                                Metadata</h3>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
+                                    Type Title</label>
+                                <select name="certificate_title" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                    <option value="Appointment Letter">Appointment Letter</option>
+                                    <option value="Interview Letter">Interview Letter</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Issue
+                                    Date & Time</label>
+                                <input type="datetime-local" name="issue_date" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    value="<?php echo date('Y-m-d\TH:i'); ?>">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Expiry
+                                    Date & Time</label>
+                                <input type="datetime-local" name="expiry_date" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    value="<?php echo date('Y-m-d\TH:i', strtotime('+1 year')); ?>">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Timezone</label>
+                                <select name="timezone" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                    <option value="UTC">UTC (Coordinated Universal Time / UTC+0)</option>
+                                    <option value="EST">EST (Eastern Standard Time / UTC-5)</option>
+                                    <option value="GMT">GMT (Greenwich Mean Time / UTC+0)</option>
+                                    <option value="SGT">SGT (Singapore Time / UTC+8)</option>
+                                    <option value="GST">GST (Gulf Standard Time / UTC+4)</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label
+                                    class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
+                                    Issuing Company</label>
+                                <input type="text" name="authority" required
+                                    class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    placeholder="e.g., Department of Compliance">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <button type="submit" id="submitBtn"
+                            class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-8 py-3 rounded-xl transition duration-200 shadow-md">
+                            <span id="btnText">Generate Digital Document</span>
+                            <svg id="btnSpinner" class="hidden animate-spin ml-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB B: Letters Archive Archive -->
+            <div id="tabPanelArchive" class="hidden space-y-6">
+                <!-- Search & Filters Block -->
+                <div
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Search Input -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Search
+                            Records</label>
+                        <input type="text" id="archiveSearch" oninput="applyFilters()"
+                            placeholder="Doc ID, Name, or Passport..."
+                            class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    </div>
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Compliance
+                            Status</label>
+                        <select id="filterStatus" onchange="applyFilters()"
+                            class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <option value="ALL">All Records</option>
+                            <option value="VALID">Valid / Active</option>
+                            <option value="EXPIRED">Expired</option>
+                        </select>
+                    </div>
+                    <!-- Letter Type Filter -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Letter
+                            Type</label>
+                        <select id="filterType" onchange="applyFilters()"
+                            class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <option value="ALL">All Types</option>
+                            <option value="Appointment Letter">Appointment Letter</option>
+                            <option value="Interview Letter">Interview Letter</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Responsive Archive Table -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    <th class="py-4 px-6">Doc ID</th>
+                                    <th class="py-4 px-6">Recipient Name</th>
+                                    <th class="py-4 px-6">Passport ID</th>
+                                    <th class="py-4 px-6">Letter Type</th>
+                                    <th class="py-4 px-6">Expiry Status</th>
+                                    <th class="py-4 px-6 text-right">Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordsTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- JS populated elements go here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State Placeholder -->
+                    <div id="emptyState" class="hidden p-12 text-center">
+                        <svg class="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <p class="text-sm font-semibold text-slate-600">No matching letters discovered.</p>
+                        <p class="text-xs text-slate-400 mt-1">Adjust your search strings or filtration drop-downs.</p>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="bg-slate-50 border-t border-slate-100 py-3.5 px-6 flex items-center justify-between">
+                        <span id="paginationInfo" class="text-xs text-slate-500 font-medium">Showing 0 to 0 of 0
+                            entries</span>
+                        <div class="flex items-center space-x-2">
+                            <button id="prevBtn" onclick="prevPage()"
+                                class="px-3 py-1.5 text-xs font-semibold border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-50 disabled:pointer-events-none transition shadow-sm">
+                                Previous
+                            </button>
+                            <button id="nextBtn" onclick="nextPage()"
+                                class="px-3 py-1.5 text-xs font-semibold border border-slate-200 bg-white rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-50 disabled:pointer-events-none transition shadow-sm">
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -650,6 +756,14 @@ require_once 'includes/auth.php';
 
     <!-- Frontend controller script -->
     <script src="assets/js/app.js"></script>
+
+    <!-- Injection of PHP records database directly into JS scope -->
+    <script>
+        const databaseInjectedRecords = <?php
+        $json_file = 'data/records.json';
+        echo file_exists($json_file) ? file_get_contents($json_file) : '{}';
+        ?>;
+    </script>
 </body>
 
 </html>
