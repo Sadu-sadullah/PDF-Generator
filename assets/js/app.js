@@ -26,76 +26,135 @@ let currentRecord = null;
 let currentVerifyUrl = "";
 let isNewLetterGenerated = false;
 
+// Submit Listener: Loads local draft into sandbox modal for user review (NO server write yet)
 document
   .getElementById("certificateForm")
-  .addEventListener("submit", async function (e) {
+  .addEventListener("submit", function (e) {
     e.preventDefault();
 
-    const submitBtn = document.getElementById("submitBtn");
-    const btnText = document.getElementById("btnText");
-    const btnSpinner = document.getElementById("btnSpinner");
-
-    // UI Loading State
-    submitBtn.disabled = true;
-    btnSpinner.classList.remove("hidden");
-    btnText.textContent = "Registering Entry...";
-
+    // Compile temporary draft details object
     const formData = new FormData(this);
-    let rawResponseText = "";
+    const draftRecord = {
+      doc_id: "DRAFT-PREVIEW",
+      first_name: formData.get("first_name"),
+      last_name: formData.get("last_name"),
+      nationality: formData.get("nationality"),
+      passport: formData.get("passport"),
+      dob: formData.get("dob"),
+      designation: formData.get("designation"),
+      salary: formData.get("salary"),
+      phone: formData.get("phone"),
+      email: formData.get("email"),
+      certificate_title: formData.get("certificate_title"),
+      issue_date: formData.get("issue_date"),
+      expiry_date: formData.get("expiry_date"),
+      authority: formData.get("authority"),
+      timezone: formData.get("timezone"),
+    };
 
-    try {
-      const response = await fetch("generate_pdf.php", {
-        method: "POST",
-        body: formData,
-      });
+    // 1. Clone the clean layout template into the modal preview area
+    const previewArea = document.getElementById("visualPreviewArea");
+    const templateSrc = document.getElementById("pdfRenderingTemplate");
 
-      rawResponseText = await response.text();
-
-      // Parse JSON payload
-      const resData = JSON.parse(rawResponseText);
-
-      if (resData.status === "success") {
-        currentDocId = resData.doc_id;
-        currentRecord = resData.data;
-        currentVerifyUrl = resData.verify_url;
-
-        isNewLetterGenerated = true; // NEW: Set flag to true on successful creation
-
-        // 1. First clone the hidden template into the modal canvas area
-        const previewArea = document.getElementById("visualPreviewArea");
-        const templateSrc = document.getElementById("pdfRenderingTemplate");
-
-        if (previewArea && templateSrc) {
-          const templateClone = templateSrc.cloneNode(true);
-          templateClone.id = "clonedPdfTemplate"; // prevent ID duplicate issues
-          previewArea.innerHTML = "";
-          previewArea.appendChild(templateClone);
-        }
-
-        // 2. Populate both the hidden and cloned versions now that they exist in the DOM
-        populateTemplate(currentRecord, currentVerifyUrl);
-
-        // 3. Populate Modal text elements
-        const modalDocIdEl = document.getElementById("modalDocId");
-        if (modalDocIdEl) modalDocIdEl.textContent = `Doc ID: ${currentDocId}`;
-
-        const targetEmailEl = document.getElementById("targetEmail");
-        if (targetEmailEl) targetEmailEl.value = currentRecord.email;
-
-        openModal();
-      } else {
-        alert(resData.message || "Error occurred while saving entry.");
-      }
-    } catch (error) {
-      console.error("Raw Server Response:", rawResponseText);
-      console.error("JS Processing Error details:", error);
-      alert("Browser JavaScript Error: " + error.message);
-    } finally {
-      submitBtn.disabled = false;
-      btnSpinner.classList.add("hidden");
-      btnText.textContent = "Generate Digital Document";
+    if (previewArea && templateSrc) {
+      const templateClone = templateSrc.cloneNode(true);
+      templateClone.id = "clonedPdfTemplate";
+      previewArea.innerHTML = "";
+      previewArea.appendChild(templateClone);
     }
+
+    // 2. Populate cloned version with the Draft record values
+    // Using a draft placeholder URL for the temporary QR Code
+    const draftVerifyUrl =
+      "https://your-domain.com/verify.php?doc_id=DRAFT-PREVIEW";
+    populateTemplate(draftRecord, draftVerifyUrl);
+
+    // 3. Set Modal UI to PRE-GENERATION REVIEW STATE
+    document.getElementById("modalHeaderReview").classList.remove("hidden");
+    document.getElementById("modalHeaderFinal").classList.add("hidden");
+    document.getElementById("panelReviewState").classList.remove("hidden");
+    document.getElementById("panelFinalState").classList.add("hidden");
+
+    const modalDocIdEl = document.getElementById("modalDocId");
+    if (modalDocIdEl) {
+      modalDocIdEl.textContent = "Doc ID: DRAFT-PREVIEW";
+    }
+
+    // Open Modal for review
+    openModal();
   });
+
+// Final Validation & Server Generation Controller
+async function confirmAndGenerate() {
+  const confirmSaveBtn = document.getElementById("confirmSaveBtn");
+  const confirmBtnText = document.getElementById("confirmBtnText");
+  const confirmSpinner = document.getElementById("confirmSpinner");
+
+  // UI Loading state
+  confirmSaveBtn.disabled = true;
+  confirmSpinner.classList.remove("hidden");
+  confirmBtnText.textContent = "Registering & Compiling...";
+
+  const form = document.getElementById("certificateForm");
+  const formData = new FormData(form);
+  let rawResponseText = "";
+
+  try {
+    // Post data to the server database
+    const response = await fetch("generate_pdf.php", {
+      method: "POST",
+      body: formData,
+    });
+
+    rawResponseText = await response.text();
+    const resData = JSON.parse(rawResponseText);
+
+    if (resData.status === "success") {
+      currentDocId = resData.doc_id;
+      currentRecord = resData.data;
+      currentVerifyUrl = resData.verify_url;
+
+      isNewLetterGenerated = true; // Mark as generated so closing modal triggers page reload
+
+      // 1. Re-populate both templates with the permanent, registered details
+      populateTemplate(currentRecord, currentVerifyUrl);
+
+      // 2. Re-render cloned modal preview with permanent registered values
+      const previewArea = document.getElementById("visualPreviewArea");
+      const templateSrc = document.getElementById("pdfRenderingTemplate");
+      if (previewArea && templateSrc) {
+        const templateClone = templateSrc.cloneNode(true);
+        templateClone.id = "clonedPdfTemplate";
+        previewArea.innerHTML = "";
+        previewArea.appendChild(templateClone);
+        populateTemplate(currentRecord, currentVerifyUrl); // Re-bind images and details to clone
+      }
+
+      // 3. Transition Modal UI to POST-GENERATION TASK STATE
+      document.getElementById("modalHeaderReview").classList.add("hidden");
+      document.getElementById("modalHeaderFinal").classList.remove("hidden");
+      document.getElementById("panelReviewState").classList.add("hidden");
+      document.getElementById("panelFinalState").classList.remove("hidden");
+
+      const modalDocIdEl = document.getElementById("modalDocId");
+      if (modalDocIdEl) modalDocIdEl.textContent = `Doc ID: ${currentDocId}`;
+
+      const targetEmailEl = document.getElementById("targetEmail");
+      if (targetEmailEl) targetEmailEl.value = currentRecord.email;
+    } else {
+      alert(resData.message || "Error occurred while saving entry.");
+    }
+  } catch (error) {
+    console.error("Raw Server Response:", rawResponseText);
+    console.error("JS Processing Error details:", error);
+    alert("Browser JavaScript Error: " + error.message);
+  } finally {
+    // Reset button loading state
+    confirmSaveBtn.disabled = false;
+    confirmSpinner.classList.add("hidden");
+    confirmBtnText.textContent = "Confirm & Save Letter";
+  }
+}
 
 // Helper: Safely sets text values without crashing if selectors are missing
 function setSelectorText(selector, value) {
@@ -531,17 +590,18 @@ function nextPage() {
   }
 }
 
-// Loads selected database records directly into sandbox template & opens modal
+// Loads selected database records directly into sandbox template & opens modal (Bypasses Review State)
 function loadRecordToSandbox(record) {
   currentDocId = record.doc_id;
   currentRecord = record;
+  isNewLetterGenerated = false; // Set to false so closing historical preview does not reload page
 
   // Synthesize verify URL for selected archive item
   const protocol =
     window.location.protocol === "https:" ? "https://" : "http://";
   currentVerifyUrl = `${protocol}${window.location.host}${window.location.pathname.replace("dashboard.php", "verify.php")}?doc_id=${currentDocId}`;
 
-  // 1. First clone the hidden template into the modal canvas area
+  // 1. Clone layout template into visual modal canvas
   const previewArea = document.getElementById("visualPreviewArea");
   const templateSrc = document.getElementById("pdfRenderingTemplate");
 
@@ -552,15 +612,17 @@ function loadRecordToSandbox(record) {
     previewArea.appendChild(templateClone);
   }
 
-  // 2. Populate cloned version inside the DOM
+  // 2. Populate cloned version with permanent values
   populateTemplate(currentRecord, currentVerifyUrl);
 
-  // 3. Populate Modal text elements
+  // 3. Forces Modal UI directly into POST-GENERATION TASK STATE (No review options shown)
+  document.getElementById("modalHeaderReview").classList.add("hidden");
+  document.getElementById("modalHeaderFinal").classList.remove("hidden");
+  document.getElementById("panelReviewState").classList.add("hidden");
+  document.getElementById("panelFinalState").classList.remove("hidden");
+
   const modalDocIdEl = document.getElementById("modalDocId");
   if (modalDocIdEl) modalDocIdEl.textContent = `Doc ID: ${currentDocId}`;
-
-  const targetEmailEl = document.getElementById("targetEmail");
-  if (targetEmailEl) targetEmailEl.value = currentRecord.email;
 
   openModal();
 }

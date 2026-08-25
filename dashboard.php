@@ -350,7 +350,7 @@ require_once 'includes/auth.php';
         </div>
     </main>
 
-    <!-- Interactive Actions & PDF Preview Modal (Always side-by-side on tablets and desktops) -->
+    <!-- Interactive Actions & PDF Preview Modal (With Pre-Generation Review States) -->
     <div id="previewModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity" onclick="closeModal()"></div>
@@ -358,11 +358,15 @@ require_once 'includes/auth.php';
 
             <div
                 class="inline-block align-middle bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl w-full">
-                <!-- Modal Header -->
+
+                <!-- Modal Header (Toggled dynamically by JS) -->
                 <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-base leading-6" id="modal-title">Letter Successfully Generated
-                        </h3>
+                        <!-- Review State Title -->
+                        <h3 class="font-bold text-base leading-6" id="modalHeaderReview">Review Letter Details</h3>
+                        <!-- Final State Title -->
+                        <h3 class="font-bold text-base leading-6 hidden" id="modalHeaderFinal">Letter Successfully
+                            Generated</h3>
                         <p class="text-xs text-slate-400 mt-0.5" id="modalDocId">Doc ID: ---</p>
                     </div>
                     <button onclick="closeModal()"
@@ -374,7 +378,7 @@ require_once 'includes/auth.php';
                     </button>
                 </div>
 
-                <!-- Modal Body (Always split columns on md screens and up) -->
+                <!-- Modal Body -->
                 <div class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-slate-100">
                     <!-- PDF Canvas Area -->
                     <div class="flex-grow p-4 bg-slate-200 md:w-3/5 lg:w-2/3">
@@ -384,9 +388,41 @@ require_once 'includes/auth.php';
                         </div>
                     </div>
 
-                    <!-- Actions Panel (Always visible on the right on md+) -->
+                    <!-- Actions Panel (Toggled dynamically by JS) -->
                     <div class="w-full md:w-2/5 lg:w-80 p-6 bg-white flex flex-col justify-between">
-                        <div class="space-y-4">
+
+                        <!-- PANEL STATE 1: PRE-GENERATION REVIEW ACTIONS -->
+                        <div id="panelReviewState" class="space-y-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Confirm Registration
+                            </h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">
+                                Please review the letter formatting and recipient details. Once confirmed, the record
+                                will be officially registered in the server database.
+                            </p>
+
+                            <!-- Confirm and Save Trigger -->
+                            <button type="button" onclick="confirmAndGenerate()" id="confirmSaveBtn"
+                                class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition shadow-sm">
+                                <span id="confirmBtnText">Confirm & Save Letter</span>
+                                <svg id="confirmSpinner" class="hidden animate-spin ml-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </button>
+
+                            <!-- Back and Edit trigger -->
+                            <button type="button" onclick="closeModal()"
+                                class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
+                                Go Back & Edit
+                            </button>
+                        </div>
+
+                        <!-- PANEL STATE 2: POST-GENERATION TASK ACTIONS -->
+                        <div id="panelFinalState" class="hidden space-y-4">
                             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Document Tasks</h4>
 
                             <button onclick="triggerPDFDownload()"
