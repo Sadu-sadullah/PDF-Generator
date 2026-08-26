@@ -94,6 +94,10 @@ require_once 'includes/auth.php';
                         class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
                         Supportive Docs
                     </button>
+                    <button id="tabBtnBulk" onclick="switchTab('bulk')"
+                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        Bulk Creation
+                    </button>
                 </div>
             </div>
 
@@ -577,6 +581,180 @@ require_once 'includes/auth.php';
                 </div>
             </div>
 
+            <!-- TAB E: Dedicated Bulk Document Creation Panel (Supporting both Direct & Staged workflows) -->
+            <div id="tabPanelBulk" class="hidden space-y-6">
+
+                <!-- CSV Drag-And-Drop / Import Card -->
+                <div
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Left: Instructions & Exporter -->
+                    <div class="md:col-span-1 space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Bulk Generation</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Upload a standard spreadsheet (.csv) list. You can choose to process and compile records
+                            instantly, or store them in your staging database to select and generate later.
+                        </p>
+
+                        <!-- Workflow Action Selector -->
+                        <div class="space-y-2 border-t border-slate-100 pt-3">
+                            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Choose
+                                Workflow:</span>
+                            <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="bulkWorkflowType" value="DIRECT" checked
+                                    onchange="toggleWorkflowUI()"
+                                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
+                                Method 1: Direct Instant Compile
+                            </label>
+                            <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="bulkWorkflowType" value="STAGE" onchange="toggleWorkflowUI()"
+                                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
+                                Method 2: Upload & Stage in Database First
+                            </label>
+                        </div>
+
+                        <button type="button" onclick="downloadCsvTemplate()"
+                            class="w-full inline-flex items-center justify-center text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2.5 rounded-lg transition shadow-sm">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download CSV Template
+                        </button>
+                    </div>
+
+                    <!-- Right: Drag and Drop Area -->
+                    <div class="md:col-span-2">
+                        <div id="dropZone" onclick="document.getElementById('csvFileInput').click()"
+                            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                            ondrop="handleFileDrop(event)"
+                            class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50 hover:bg-blue-50/20 transition duration-150 flex flex-col items-center justify-center min-h-[180px]">
+                            <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileSelect(event)"
+                                class="hidden">
+                            <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                </path>
+                            </svg>
+                            <span class="block text-xs font-semibold text-slate-700">Drag and drop your spreadsheet
+                                (.csv) here</span>
+                            <span class="block text-[10px] text-slate-400 mt-1">or click to browse local folders</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PARSER CONFIRMATION CARD: For Way 1 (Direct Instant Compile) -->
+                <div id="bulkQueueCard"
+                    class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 1: Instant Compile
+                            Confirmation</h3>
+                    </div>
+
+                    <!-- Streamlined confirmation summary alert -->
+                    <div class="p-6 flex items-center space-x-4 bg-blue-50/50">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <!-- Premium checkmark document icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900" id="bulkQueueTitle">Ready to Compile</h4>
+                            <p class="text-xs text-slate-500 mt-0.5" id="bulkQueueMessage">0 records parsed from file.
+                                Ready to generate bulk letters.</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar and Compile button -->
+                    <div
+                        class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div id="bulkProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600">
+                                <span id="progressText">Generating letters...</span>
+                                <span id="progressPct">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-150"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="ml-auto flex items-center space-x-3 shrink-0">
+                            <button onclick="clearBulkQueue()"
+                                class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+                            <button id="bulkCompileBtn" onclick="generateBulkQueue()"
+                                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="bulkCompileText">Generate All Letters</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STAGING CONSOLE: For Way 2 (Browse and compile from stored database records later) -->
+                <div id="stagingConsoleCard"
+                    class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 2: Staging
+                                Database Queue</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Select from previously uploaded, ungenerated
+                                profile list to compile letters</p>
+                        </div>
+                        <span id="stagingCountBadge"
+                            class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">0 Staged
+                            Records</span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[350px]">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-wider text-slate-400 sticky top-0 bg-white z-10">
+                                    <th class="py-3 px-6 text-center w-12"><input type="checkbox" id="stagingSelectAll"
+                                            checked onclick="toggleAllStagingQueue(this)"
+                                            class="w-3.5 h-3.5 text-amber-600 rounded"></th>
+                                    <th class="py-3 px-6">Recipient Name</th>
+                                    <th class="py-3 px-6">Passport ID</th>
+                                    <th class="py-3 px-6">Designation</th>
+                                    <th class="py-3 px-6">Target Letter</th>
+                                    <th class="py-3 px-6">Import Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stagingQueueTableBody" class="divide-y divide-slate-100 text-xs text-slate-600">
+                                <!-- JS populated dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div
+                        class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div id="stagingProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600">
+                                <span id="stagingProgressText">Compiling staged letters...</span>
+                                <span id="stagingProgressPct">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div id="stagingProgressBar"
+                                    class="bg-amber-600 h-2 rounded-full transition-all duration-150" style="width: 0%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ml-auto flex items-center space-x-3 shrink-0">
+                            <button onclick="clearStagingDatabase()"
+                                class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Clear
+                                Database</button>
+                            <button id="stagingCompileBtn" onclick="generateFromStagingArea()"
+                                class="inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="stagingCompileText">Compile Selected Staged Letters</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </main>
 
@@ -1023,11 +1201,17 @@ require_once 'includes/auth.php';
     <!-- Frontend controller script -->
     <script src="assets/js/app.js"></script>
 
-    <!-- Injection of PHP records database directly into JS scope -->
+    <!-- Injection of PHP records database & staging database directly into JS scope -->
     <script>
         const databaseInjectedRecords = <?php
         $json_file = 'data/records.json';
         echo file_exists($json_file) ? file_get_contents($json_file) : '{}';
+        ?>;
+
+        // Dynamic loading of Way 2 Staging Database
+        const databaseInjectedStaged = <?php
+        $staged_file = 'data/staged_records.json';
+        echo file_exists($staged_file) ? file_get_contents($staged_file) : '[]';
         ?>;
     </script>
 </body>
