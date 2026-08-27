@@ -61,41 +61,43 @@ require_once 'includes/auth.php';
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="max-w-4xl mx-auto">
 
-            <!-- Premium Non-Wrapping Scrollable Tab Switcher -->
-            <div
-                class="flex flex-col xl:flex-row xl:items-center xl:justify-between border-b border-slate-200 pb-5 mb-8">
-                <div class="mb-4 xl:mb-0">
+            <!-- Restructured Full-Width Stacked Header & Tab Switcher -->
+            <div class="border-b border-slate-200 pb-5 mb-8 space-y-5">
+
+                <!-- Top Block: Header & Sub-Header Text (Spans 100% width) -->
+                <div>
                     <h2 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVerify Console</h2>
                     <p class="text-sm text-slate-500 mt-1">Manage compliance letters, attach supportive files, and
                         dispatch records.</p>
                 </div>
-                <!-- Horizontal scrolling tab container (Now grab-draggable & scrollable) -->
+
+                <!-- Simplified static full-width segment selector container -->
                 <div id="scrollableTabSelector"
-                    class="w-full xl:w-auto overflow-x-auto whitespace-nowrap bg-slate-200/60 p-1 rounded-xl border border-slate-200 shadow-sm flex no-scrollbar select-none cursor-grab active:cursor-grabbing"
-                    style="-ms-overflow-style: none; scrollbar-width: none; user-select: none;">
+                    class="w-full overflow-x-auto whitespace-nowrap bg-slate-200/60 p-1 rounded-xl border border-slate-200 shadow-sm flex no-scrollbar"
+                    style="-ms-overflow-style: none; scrollbar-width: none;">
                     <style>
                         .no-scrollbar::-webkit-scrollbar {
                             display: none;
                         }
                     </style>
                     <button id="tabBtnGenerate" onclick="switchTab('generate')"
-                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
+                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
                         Generate New
                     </button>
                     <button id="tabBtnArchive" onclick="switchTab('archive')"
-                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
                         Archived Letters
                     </button>
                     <button id="tabBtnEmail" onclick="switchTab('email')"
-                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
                         Email Dispatcher
                     </button>
                     <button id="tabBtnUpload" onclick="switchTab('upload')"
-                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
                         Supportive Docs
                     </button>
                     <button id="tabBtnBulk" onclick="switchTab('bulk')"
-                        class="shrink-0 px-4 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
                         Bulk Creation
                     </button>
                 </div>
@@ -204,14 +206,17 @@ require_once 'includes/auth.php';
                         </div>
                     </div>
 
-                    <!-- Section 3: Document Metadata -->
+                    <!-- Section 3: Document Metadata (Restructured to 3-column Date & Timezone row) -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
                             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">3. Document
                                 Metadata</h3>
                         </div>
-                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div class="md:col-span-2">
+                        <!-- Parent Grid updated to md:grid-cols-3 -->
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5">
+
+                            <!-- Letter Type Title (Spans all 3 columns) -->
+                            <div class="md:col-span-3">
                                 <label
                                     class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
                                     Type Title</label>
@@ -221,6 +226,8 @@ require_once 'includes/auth.php';
                                     <option value="Interview Letter">Interview Letter</option>
                                 </select>
                             </div>
+
+                            <!-- Column 1: Issue Date -->
                             <div>
                                 <label
                                     class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Issue
@@ -229,6 +236,8 @@ require_once 'includes/auth.php';
                                     class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                                     value="<?php echo date('Y-m-d\TH:i'); ?>">
                             </div>
+
+                            <!-- Column 2: Expiry Date -->
                             <div>
                                 <label
                                     class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Expiry
@@ -237,7 +246,9 @@ require_once 'includes/auth.php';
                                     class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                                     value="<?php echo date('Y-m-d\TH:i', strtotime('+1 year')); ?>">
                             </div>
-                            <div class="md:col-span-2">
+
+                            <!-- Column 3: Timezone -->
+                            <div>
                                 <label
                                     class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Timezone</label>
                                 <select name="timezone" required
@@ -249,7 +260,9 @@ require_once 'includes/auth.php';
                                     <option value="GST">GST (Gulf Standard Time / UTC+4)</option>
                                 </select>
                             </div>
-                            <div class="md:col-span-2">
+
+                            <!-- Letter Issuing Company (Spans all 3 columns) -->
+                            <div class="md:col-span-3">
                                 <label
                                     class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Letter
                                     Issuing Company</label>
@@ -647,7 +660,8 @@ require_once 'includes/auth.php';
                 <div id="bulkQueueCard"
                     class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 1: Instant Compile
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 1: Instant
+                            Compile
                             Confirmation</h3>
                     </div>
 
@@ -786,99 +800,102 @@ require_once 'includes/auth.php';
                     </button>
                 </div>
 
-                <!-- Modal Body -->
-                <div class="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-slate-100">
-                    <!-- PDF Canvas Area -->
-                    <div class="flex-grow p-4 bg-slate-200 md:w-3/5 lg:w-2/3">
-                        <div class="w-full bg-white rounded border border-slate-300 shadow-sm overflow-y-auto h-[500px] p-6"
+                <!-- Modal Body (Stacked Layout: Full-Width Document Canvas on top, Action Dock on bottom) -->
+                <div class="flex flex-col bg-slate-100">
+
+                    <!-- Top Block: Full-Width Document Canvas Area -->
+                    <div class="p-6 bg-slate-200">
+                        <!-- Sized to h-[550px] with flex centering for standard desktop display -->
+                        <div class="w-full bg-white rounded-xl border border-slate-300 shadow-inner overflow-y-auto h-[550px] p-6 flex justify-center"
                             id="previewCanvasContainer">
                             <div id="visualPreviewArea" class="bg-white"></div>
                         </div>
                     </div>
 
-                    <!-- Actions Panel (Toggled dynamically by JS) -->
-                    <div class="w-full md:w-2/5 lg:w-80 p-6 bg-white flex flex-col justify-between">
+                    <!-- Bottom Block: Horizontal Actions Dock (Toggled dynamically by JS) -->
+                    <div
+                        class="w-full p-6 bg-white border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
                         <!-- PANEL STATE 1: PRE-GENERATION REVIEW ACTIONS -->
-                        <div id="panelReviewState" class="space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Confirm Registration
-                            </h4>
-                            <p class="text-xs text-slate-400 leading-relaxed">
-                                Please review the letter formatting and recipient details. Once confirmed, the record
-                                will be officially registered in the server database.
-                            </p>
-
-                            <!-- Confirm and Save Trigger -->
-                            <button type="button" onclick="confirmAndGenerate()" id="confirmSaveBtn"
-                                class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition shadow-sm">
-                                <span id="confirmBtnText">Confirm & Save Letter</span>
-                                <svg id="confirmSpinner" class="hidden animate-spin ml-2 h-4 w-4 text-white"
-                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                    </path>
-                                </svg>
-                            </button>
-
-                            <!-- Back and Edit trigger -->
-                            <button type="button" onclick="closeModal()"
-                                class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
-                                Go Back & Edit
-                            </button>
+                        <div id="panelReviewState"
+                            class="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="max-w-md text-left">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Confirm
+                                    Registration</h4>
+                                <p class="text-[11px] text-slate-400 leading-normal mt-0.5">
+                                    Please review the letter layout. Once confirmed, the document will be officially
+                                    registered in the server database.
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-3 shrink-0">
+                                <button type="button" onclick="closeModal()"
+                                    class="px-4 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
+                                    Go Back & Edit
+                                </button>
+                                <button type="button" onclick="confirmAndGenerate()" id="confirmSaveBtn"
+                                    class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-sm">
+                                    <span id="confirmBtnText">Confirm & Save Letter</span>
+                                    <svg id="confirmSpinner" class="hidden animate-spin ml-2 h-3.5 w-3.5 text-white"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- PANEL STATE 2: POST-GENERATION TASK ACTIONS -->
-                        <div id="panelFinalState" class="hidden space-y-4">
-                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Document Tasks</h4>
+                        <!-- STATE B: POST-GENERATION TASK ACTIONS (Updated to restore shareStatus element) -->
+                        <div id="panelFinalState"
+                            class="hidden w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="text-left">
+                                <p class="text-[11px] text-slate-400 leading-normal">
+                                    Generated client-side. The public verification record is active on server databases.
+                                </p>
+                                <!-- Restored: Status element now sits cleanly below description text -->
+                                <p id="shareStatus" class="hidden text-[10px] font-semibold text-blue-600 mt-1"></p>
+                            </div>
 
-                            <button onclick="triggerPDFDownload()"
-                                class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
-                                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Download PDF
-                            </button>
+                            <!-- Standard Task Controls aligned side-by-side -->
+                            <div class="flex flex-wrap items-center gap-3 shrink-0">
+                                <button onclick="triggerPDFDownload()"
+                                    class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-blue-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Download PDF
+                                </button>
 
-                            <button onclick="triggerPDFPrint()"
-                                class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
-                                <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                                    </path>
-                                </svg>
-                                Print Document
-                            </button>
+                                <button onclick="triggerPDFPrint()"
+                                    class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition shadow-sm">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                        </path>
+                                    </svg>
+                                    Print Document
+                                </button>
 
-                            <div class="border-t border-slate-100 pt-4 mt-4">
-                                <label
-                                    class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Share
-                                    Letter</label>
                                 <button onclick="shareDocument()"
-                                    class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-blue-600 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm">
+                                    class="inline-flex items-center justify-center px-4 py-2 border border-blue-600 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm">
                                     <!-- Standard Box Up-Arrow Share Icon -->
-                                    <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                        class="lucide lucide-share" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                                         <polyline points="16 6 12 2 8 6" />
                                         <line x1="12" x2="12" y1="2" y2="15" />
                                     </svg>
                                     Share / Send File
                                 </button>
-                                <p id="shareStatus" class="hidden text-[10px] mt-1.5"></p>
                             </div>
                         </div>
 
-                        <div class="mt-8 pt-4 border-t border-slate-100">
-                            <p class="text-[10px] text-slate-400 leading-normal">
-                                Generated client-side. The public verification record is active on server databases.
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1008,11 +1025,12 @@ require_once 'includes/auth.php';
                     </tr>
                 </table>
 
-                <!-- Signatures & Stamp block -->
+                <!-- Signatures & Stamp block (Page 1: Seal ONLY, Sized dynamically to prevent clipping) -->
                 <table
                     style="width: 100%; border-collapse: collapse; border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 50px;">
                     <tr>
-                        <td style="width: 45%; text-align: left; vertical-align: top; padding-right: 15px;">
+                        <!-- Left: Security disclaimer -->
+                        <td style="width: 70%; text-align: left; vertical-align: top; padding-right: 15px;">
                             <div style="font-size: 11.5px; font-weight: bold; color: #0f172a; margin-bottom: 3px;">
                                 Registry Verification Unit</div>
                             <p style="font-size: 9px; color: #94a3b8; line-height: 1.4; margin: 0;">
@@ -1022,7 +1040,8 @@ require_once 'includes/auth.php';
                                 registration.
                             </p>
                         </td>
-                        <td style="width: 25%; text-align: center; vertical-align: middle;">
+                        <!-- Right: Company Stamp Image (No signature) -->
+                        <td style="width: 30%; text-align: right; vertical-align: middle;">
                             <div
                                 style="border: 1px dashed #cbd5e1; border-radius: 50%; width: 85px; height: 85px; display: inline-block; line-height: 85px; text-align: center; position: relative;">
                                 <img src="assets/img/seal.png"
@@ -1031,20 +1050,6 @@ require_once 'includes/auth.php';
                                 <span
                                     style="font-size: 8px; color: #94a3b8; font-weight: bold; display: block; line-height: 85px;">STAMP
                                     AREA</span>
-                            </div>
-                        </td>
-                        <td style="width: 30%; text-align: right; vertical-align: bottom;">
-                            <div style="display: inline-block; text-align: center; width: 140px;">
-                                <div style="text-align: center; margin-bottom: 2px;">
-                                    <img src="assets/img/signature.png"
-                                        style="max-height: 45px; max-width: 120px; display: inline-block; vertical-align: bottom;"
-                                        alt="">
-                                </div>
-                                <div style="border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 2px;">
-                                    <div style="font-size: 10px; font-weight: bold; color: #0f172a;">Authorized
-                                        Signatory</div>
-                                    <div style="font-size: 9px; color: #94a3b8;">DocuVerify Secretariat</div>
-                                </div>
                             </div>
                         </td>
                     </tr>
@@ -1166,6 +1171,51 @@ require_once 'includes/auth.php';
                             successful completion of two (2) years of service, and at the discretion of the company, you
                             will receive an annual flight ticket to your home country. The company will determine the
                             airfare for each sector once a year, in accordance with the policy of the company.</td>
+                    </tr>
+                </table>
+
+                <!-- Signatures & Stamp block (Page 2: Seal AND Signature, Sized dynamically to prevent clipping) -->
+                <table
+                    style="width: 100%; border-collapse: collapse; border-top: 2px solid #e2e8f0; padding-top: 20px; margin-top: 40px;">
+                    <tr>
+                        <!-- Left: Security disclaimer -->
+                        <td style="width: 45%; text-align: left; vertical-align: top; padding-right: 15px;">
+                            <div style="font-size: 11.5px; font-weight: bold; color: #0f172a; margin-bottom: 3px;">
+                                Registry Verification Unit</div>
+                            <p style="font-size: 9px; color: #94a3b8; line-height: 1.4; margin: 0;">
+                                <strong>Security Protection Disclaimer:</strong> This is an official document validated
+                                through local system archives. To verify authenticity, scan the associated header QR
+                                code. Direct modification of this document's printed layout compromises valid
+                                registration.
+                            </p>
+                        </td>
+                        <!-- Middle: Company Stamp Image -->
+                        <td style="width: 25%; text-align: center; vertical-align: middle;">
+                            <div
+                                style="border: 1px dashed #cbd5e1; border-radius: 50%; width: 85px; height: 85px; display: inline-block; line-height: 85px; text-align: center; position: relative;">
+                                <img src="assets/img/seal.png"
+                                    style="max-height: 80px; max-width: 80px; position: absolute; top: 2px; left: 2px; opacity: 0.85;"
+                                    alt="">
+                                <span
+                                    style="font-size: 8px; color: #94a3b8; font-weight: bold; display: block; line-height: 85px;">STAMP
+                                    AREA</span>
+                            </div>
+                        </td>
+                        <!-- Right: Signature Placeholder Image -->
+                        <td style="width: 30%; text-align: right; vertical-align: bottom;">
+                            <div style="display: inline-block; text-align: center; width: 140px;">
+                                <div style="text-align: center; margin-bottom: 2px;">
+                                    <img src="assets/img/signature.png"
+                                        style="max-height: 45px; max-width: 120px; display: inline-block; vertical-align: bottom;"
+                                        alt="">
+                                </div>
+                                <div style="border-top: 1px solid #cbd5e1; padding-top: 5px; margin-top: 2px;">
+                                    <div style="font-size: 10px; font-weight: bold; color: #0f172a;">Authorized
+                                        Signatory</div>
+                                    <div style="font-size: 9px; color: #94a3b8;">DocuVerify Secretariat</div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                 </table>
 

@@ -831,45 +831,6 @@ function clearDateFilter() {
   }
 }
 
-// ==========================================
-// DRAG-TO-SCROLL HORIZONTAL SELECTOR ENGINE
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-  const slider = document.getElementById("scrollableTabSelector");
-  if (!slider) return;
-
-  let isDown = false;
-  let startX;
-  let scrollLeft;
-
-  // Mouse Down - User grabs the container
-  slider.addEventListener("mousedown", (e) => {
-    isDown = true;
-    startX = e.pageX - slider.offsetLeft;
-    scrollLeft = slider.scrollLeft;
-  });
-
-  // Mouse Leave - User moves pointer outside boundaries
-  slider.addEventListener("mouseleave", () => {
-    isDown = false;
-  });
-
-  // Mouse Up - User releases the grab
-  slider.addEventListener("mouseup", () => {
-    isDown = false;
-  });
-
-  // Mouse Move - Executes horizontal page scroll based on grab momentum
-  slider.addEventListener("mousemove", (e) => {
-    if (!isDown) return;
-    e.preventDefault(); // Prevents highlight selection bugs during drag
-
-    const x = e.pageX - slider.offsetLeft;
-    const walk = (x - startX) * 1.8; // Scroll multiplier speed
-    slider.scrollLeft = scrollLeft - walk;
-  });
-});
-
 // Updated: 5-Tab Visibility Switcher
 function switchTab(targetTab) {
   const panels = {
