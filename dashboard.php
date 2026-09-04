@@ -10,68 +10,81 @@ require_once 'includes/auth.php';
     <title>Dashboard | Letter & PDF System</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
 
     <!-- Plug & Play Client-Side PDF & QR Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            /* Premium off-white neutral background */
+        }
+
+        /* Soft focus glow animation for form inputs */
+        .premium-input:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
         }
     </style>
 </head>
 
 <body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
-    <!-- Top Navigation Bar -->
-    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+    <!-- Top Navigation Bar (Obsidian themed with subtle Indigo bottom accent) -->
+    <header class="bg-slate-950 text-white shadow-lg border-b border-blue-500/20 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                        </path>
-                    </svg>
+            <div class="flex items-center space-x-3.5">
+                <!-- Branding Icon -->
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20">
+                    <i class="fa-solid fa-shield-halved text-white text-lg"></i>
                 </div>
                 <div>
-                    <span class="font-bold text-sm tracking-tight block">DocuVerify</span>
-                    <span class="text-[10px] text-slate-400 block -mt-1">Control Panel</span>
+                    <span class="font-bold text-base tracking-tight block text-white">DocuVerify</span>
+                    <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block -mt-1">Enterprise
+                        Console</span>
                 </div>
             </div>
 
+            <!-- Profile Badge & Logout -->
             <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-2 bg-slate-800 py-1.5 px-3 rounded-full text-xs">
+                <div
+                    class="hidden sm:flex items-center space-x-2 bg-slate-900 border border-slate-800 py-1.5 px-3.5 rounded-full text-xs">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span
-                        class="text-slate-300 font-medium"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin User'); ?></span>
+                        class="text-slate-300 font-semibold"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin User'); ?></span>
                 </div>
                 <a href="logout.php"
-                    class="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 py-2 px-4 rounded-lg transition">
-                    Sign Out
+                    class="text-xs font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 py-2.5 px-4 rounded-xl transition duration-150 flex items-center">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Sign Out
                 </a>
             </div>
         </div>
     </header>
 
-    <!-- Main Workspace Container (Tabbed Layout) -->
+    <!-- Main Workspace Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="max-w-4xl mx-auto">
 
-            <!-- Restructured Full-Width Stacked Header & Tab Switcher -->
-            <div class="border-b border-slate-200 pb-5 mb-8 space-y-5">
-
-                <!-- Top Block: Header & Sub-Header Text (Spans 100% width) -->
+            <!-- Page Header & Tab Selector (Full-Width Stacked layout with Font Awesome integration) -->
+            <div class="border-b border-slate-200/80 pb-6 mb-8 space-y-5">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">DocuVerify Console</h2>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center">
+                        <i class="fa-solid fa-laptop-code text-blue-600 mr-3 text-xl"></i>
+                        DocuVerify Console
+                    </h2>
                     <p class="text-sm text-slate-500 mt-1">Manage compliance letters, attach supportive files, and
-                        dispatch records.</p>
+                        monitor system transactions.</p>
                 </div>
 
-                <!-- Simplified static full-width segment selector container -->
+                <!-- Horizontal scrolling tab container (Now grab-draggable & scrollable) -->
                 <div id="scrollableTabSelector"
                     class="w-full overflow-x-auto whitespace-nowrap bg-slate-200/60 p-1 rounded-xl border border-slate-200 shadow-sm flex no-scrollbar"
                     style="-ms-overflow-style: none; scrollbar-width: none;">
@@ -81,23 +94,28 @@ require_once 'includes/auth.php';
                         }
                     </style>
                     <button id="tabBtnGenerate" onclick="switchTab('generate')"
-                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm">
+                        class="shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 bg-white text-slate-900 shadow-sm flex items-center">
+                        <i class="fa-solid fa-file-circle-plus text-blue-600 mr-2 text-sm"></i>
                         Generate New
                     </button>
                     <button id="tabBtnArchive" onclick="switchTab('archive')"
-                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 text-slate-600 hover:text-slate-900 flex items-center">
+                        <i class="fa-solid fa-box-archive text-slate-400 mr-2 text-sm"></i>
                         Archived Letters
                     </button>
                     <button id="tabBtnEmail" onclick="switchTab('email')"
-                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 text-slate-600 hover:text-slate-900 flex items-center">
+                        <i class="fa-solid fa-paper-plane text-slate-400 mr-2 text-sm"></i>
                         Email Dispatcher
                     </button>
                     <button id="tabBtnUpload" onclick="switchTab('upload')"
-                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 text-slate-600 hover:text-slate-900 flex items-center">
+                        <i class="fa-solid fa-folder-open text-slate-400 mr-2 text-sm"></i>
                         Supportive Docs
                     </button>
                     <button id="tabBtnBulk" onclick="switchTab('bulk')"
-                        class="shrink-0 px-5 py-2.5 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900">
+                        class="shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 text-slate-600 hover:text-slate-900 flex items-center">
+                        <i class="fa-solid fa-layer-group text-slate-400 mr-2 text-sm"></i>
                         Bulk Creation
                     </button>
                 </div>
@@ -292,6 +310,54 @@ require_once 'includes/auth.php';
 
             <!-- TAB B: Letters Archive Archive -->
             <div id="tabPanelArchive" class="hidden space-y-6">
+
+                <!-- NEW: Premium Real-Time Analytics Widgets Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <!-- Widget 1: Total Letters -->
+                    <div
+                        class="bg-white rounded-2xl border border-slate-200/60 p-5 flex items-center justify-between shadow-sm border-l-4 border-blue-600">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Total
+                                Generated</span>
+                            <span id="widgetTotalCount"
+                                class="block text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div
+                            class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-file-lines text-base"></i>
+                        </div>
+                    </div>
+
+                    <!-- Widget 2: Active Letters -->
+                    <div
+                        class="bg-white rounded-2xl border border-slate-200/60 p-5 flex items-center justify-between shadow-sm border-l-4 border-emerald-500">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Active
+                                Letters</span>
+                            <span id="widgetActiveCount"
+                                class="block text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div
+                            class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                        </div>
+                    </div>
+
+                    <!-- Widget 3: Expired Letters -->
+                    <div
+                        class="bg-white rounded-2xl border border-slate-200/60 p-5 flex items-center justify-between shadow-sm border-l-4 border-rose-500">
+                        <div>
+                            <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Expired
+                                Letters</span>
+                            <span id="widgetExpiredCount"
+                                class="block text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div
+                            class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                        </div>
+                    </div>
+                </div>
                 <!-- Updated: Search, Status, Type, and Date Range filter selectors -->
                 <div
                     class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -647,181 +713,184 @@ require_once 'includes/auth.php';
                 </div>
             </div>
 
-        </div> <!-- Closes max-w-3xl -->
-    </main> <!-- Closes main -->
+            <!-- TAB E: Dedicated Bulk Document Creation Panel (Supporting both Direct & Staged workflows) -->
+            <div id="tabPanelBulk" class="hidden space-y-6">
 
-    <!-- TAB E: Dedicated Bulk Document Creation Panel (Supporting both Direct & Staged workflows) -->
-    <div id="tabPanelBulk" class="hidden space-y-6">
+                <!-- CSV Drag-And-Drop / Import Card -->
+                <div
+                    class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Left: Instructions & Exporter -->
+                    <div class="md:col-span-1 space-y-4">
+                        <h3 class="text-base font-bold text-slate-900">Bulk Generation</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Upload a standard spreadsheet (.csv) list. You can choose to process and compile records
+                            instantly, or store them in your staging database to select and generate later.
+                        </p>
 
-        <!-- CSV Drag-And-Drop / Import Card -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Left: Instructions & Exporter -->
-            <div class="md:col-span-1 space-y-4">
-                <h3 class="text-base font-bold text-slate-900">Bulk Generation</h3>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    Upload a standard spreadsheet (.csv) list. You can choose to process and compile records
-                    instantly, or store them in your staging database to select and generate later.
-                </p>
+                        <!-- Workflow Action Selector -->
+                        <div class="space-y-2 border-t border-slate-100 pt-3">
+                            <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Choose
+                                Workflow:</span>
+                            <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="bulkWorkflowType" value="DIRECT" checked
+                                    onchange="toggleWorkflowUI()"
+                                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
+                                Method 1: Direct Instant Compile
+                            </label>
+                            <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
+                                <input type="radio" name="bulkWorkflowType" value="STAGE" onchange="toggleWorkflowUI()"
+                                    class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
+                                Method 2: Upload & Stage in Database First
+                            </label>
+                        </div>
 
-                <!-- Workflow Action Selector -->
-                <div class="space-y-2 border-t border-slate-100 pt-3">
-                    <span class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Choose
-                        Workflow:</span>
-                    <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
-                        <input type="radio" name="bulkWorkflowType" value="DIRECT" checked onchange="toggleWorkflowUI()"
-                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
-                        Method 1: Direct Instant Compile
-                    </label>
-                    <label class="flex items-center text-xs font-semibold text-slate-600 cursor-pointer">
-                        <input type="radio" name="bulkWorkflowType" value="STAGE" onchange="toggleWorkflowUI()"
-                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 focus:ring-blue-500 mr-2">
-                        Method 2: Upload & Stage in Database First
-                    </label>
-                </div>
-
-                <button type="button" onclick="downloadCsvTemplate()"
-                    class="w-full inline-flex items-center justify-center text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2.5 rounded-lg transition shadow-sm">
-                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    Download CSV Template
-                </button>
-            </div>
-
-            <!-- Right: Drag and Drop Area -->
-            <div class="md:col-span-2">
-                <div id="dropZone" onclick="document.getElementById('csvFileInput').click()"
-                    ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
-                    ondrop="handleFileDrop(event)"
-                    class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50 hover:bg-blue-50/20 transition duration-150 flex flex-col items-center justify-center min-h-[180px]">
-                    <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileSelect(event)"
-                        class="hidden">
-                    <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                        </path>
-                    </svg>
-                    <span class="block text-xs font-semibold text-slate-700">Drag and drop your spreadsheet
-                        (.csv) here</span>
-                    <span class="block text-[10px] text-slate-400 mt-1">or click to browse local folders</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- PARSER CONFIRMATION CARD: For Way 1 (Direct Instant Compile) -->
-        <div id="bulkQueueCard" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
-                <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 1: Instant
-                    Compile
-                    Confirmation</h3>
-            </div>
-
-            <!-- Streamlined confirmation summary alert -->
-            <div class="p-6 flex items-center space-x-4 bg-blue-50/50">
-                <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                    <!-- Premium checkmark document icon -->
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-slate-900" id="bulkQueueTitle">Ready to Compile</h4>
-                    <p class="text-xs text-slate-500 mt-0.5" id="bulkQueueMessage">0 records parsed from file.
-                        Ready to generate bulk letters.</p>
-                </div>
-            </div>
-
-            <!-- Progress bar and Compile button -->
-            <div
-                class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div id="bulkProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
-                    <div class="flex justify-between text-xs font-semibold text-slate-600">
-                        <span id="progressText">Generating letters...</span>
-                        <span id="progressPct">0%</span>
+                        <button type="button" onclick="downloadCsvTemplate()"
+                            class="w-full inline-flex items-center justify-center text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3.5 py-2.5 rounded-lg transition shadow-sm">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download CSV Template
+                        </button>
                     </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-150"
-                            style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="ml-auto flex items-center space-x-3 shrink-0">
-                    <button onclick="clearBulkQueue()"
-                        class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
-                    <button id="bulkCompileBtn" onclick="generateBulkQueue()"
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
-                        <span id="bulkCompileText">Generate All Letters</span>
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <!-- STAGING CONSOLE: For Way 2 (Browse and compile from stored database records later) -->
-        <div id="stagingConsoleCard"
-            class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="border-b border-slate-100 bg-slate-50 px-6 py-4 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 2: Staging
-                        Database Queue</h3>
-                    <p class="text-[10px] text-slate-400 mt-0.5">Select from previously uploaded, ungenerated
-                        profile list to compile letters</p>
-                </div>
-                <span id="stagingCountBadge"
-                    class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">0 Staged
-                    Records</span>
-            </div>
-
-            <div class="overflow-x-auto max-h-[350px]">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr
-                            class="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-wider text-slate-400 sticky top-0 bg-white z-10">
-                            <th class="py-3 px-6 text-center w-12"><input type="checkbox" id="stagingSelectAll" checked
-                                    onclick="toggleAllStagingQueue(this)" class="w-3.5 h-3.5 text-amber-600 rounded">
-                            </th>
-                            <th class="py-3 px-6">Recipient Name</th>
-                            <th class="py-3 px-6">Passport ID</th>
-                            <th class="py-3 px-6">Designation</th>
-                            <th class="py-3 px-6">Target Letter</th>
-                            <th class="py-3 px-6">Import Date</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stagingQueueTableBody" class="divide-y divide-slate-100 text-xs text-slate-600">
-                        <!-- JS populated dynamic rows -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div
-                class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div id="stagingProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
-                    <div class="flex justify-between text-xs font-semibold text-slate-600">
-                        <span id="stagingProgressText">Compiling staged letters...</span>
-                        <span id="stagingProgressPct">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div id="stagingProgressBar" class="bg-amber-600 h-2 rounded-full transition-all duration-150"
-                            style="width: 0%">
+                    <!-- Right: Drag and Drop Area -->
+                    <div class="md:col-span-2">
+                        <div id="dropZone" onclick="document.getElementById('csvFileInput').click()"
+                            ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                            ondrop="handleFileDrop(event)"
+                            class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer bg-slate-50 hover:bg-blue-50/20 transition duration-150 flex flex-col items-center justify-center min-h-[180px]">
+                            <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileSelect(event)"
+                                class="hidden">
+                            <svg class="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                </path>
+                            </svg>
+                            <span class="block text-xs font-semibold text-slate-700">Drag and drop your spreadsheet
+                                (.csv) here</span>
+                            <span class="block text-[10px] text-slate-400 mt-1">or click to browse local folders</span>
                         </div>
                     </div>
                 </div>
-                <div class="ml-auto flex items-center space-x-3 shrink-0">
-                    <button onclick="clearStagingDatabase()"
-                        class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Clear
-                        Database</button>
-                    <button id="stagingCompileBtn" onclick="generateFromStagingArea()"
-                        class="inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
-                        <span id="stagingCompileText">Compile Selected Staged Letters</span>
-                    </button>
+
+                <!-- PARSER CONFIRMATION CARD: For Way 1 (Direct Instant Compile) -->
+                <div id="bulkQueueCard"
+                    class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4">
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 1: Instant
+                            Compile
+                            Confirmation</h3>
+                    </div>
+
+                    <!-- Streamlined confirmation summary alert -->
+                    <div class="p-6 flex items-center space-x-4 bg-blue-50/50">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                            <!-- Premium checkmark document icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900" id="bulkQueueTitle">Ready to Compile</h4>
+                            <p class="text-xs text-slate-500 mt-0.5" id="bulkQueueMessage">0 records parsed from file.
+                                Ready to generate bulk letters.</p>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar and Compile button -->
+                    <div
+                        class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div id="bulkProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600">
+                                <span id="progressText">Generating letters...</span>
+                                <span id="progressPct">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-150"
+                                    style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="ml-auto flex items-center space-x-3 shrink-0">
+                            <button onclick="clearBulkQueue()"
+                                class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+                            <button id="bulkCompileBtn" onclick="generateBulkQueue()"
+                                class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="bulkCompileText">Generate All Letters</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- STAGING CONSOLE: For Way 2 (Browse and compile from stored database records later) -->
+                <div id="stagingConsoleCard"
+                    class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 bg-slate-50 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-700">Method 2: Staging
+                                Database Queue</h3>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Select from previously uploaded, ungenerated
+                                profile list to compile letters</p>
+                        </div>
+                        <span id="stagingCountBadge"
+                            class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-lg">0 Staged
+                            Records</span>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[350px]">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="border-b border-slate-100 bg-slate-50/50 text-[10px] font-bold uppercase tracking-wider text-slate-400 sticky top-0 bg-white z-10">
+                                    <th class="py-3 px-6 text-center w-12"><input type="checkbox" id="stagingSelectAll"
+                                            checked onclick="toggleAllStagingQueue(this)"
+                                            class="w-3.5 h-3.5 text-amber-600 rounded">
+                                    </th>
+                                    <th class="py-3 px-6">Recipient Name</th>
+                                    <th class="py-3 px-6">Passport ID</th>
+                                    <th class="py-3 px-6">Designation</th>
+                                    <th class="py-3 px-6">Target Letter</th>
+                                    <th class="py-3 px-6">Import Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stagingQueueTableBody" class="divide-y divide-slate-100 text-xs text-slate-600">
+                                <!-- JS populated dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div
+                        class="bg-slate-50 border-t border-slate-100 py-4 px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div id="stagingProgressWrapper" class="hidden flex-grow max-w-md space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600">
+                                <span id="stagingProgressText">Compiling staged letters...</span>
+                                <span id="stagingProgressPct">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                                <div id="stagingProgressBar"
+                                    class="bg-amber-600 h-2 rounded-full transition-all duration-150" style="width: 0%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ml-auto flex items-center space-x-3 shrink-0">
+                            <button onclick="clearStagingDatabase()"
+                                class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">Clear
+                                Database</button>
+                            <button id="stagingCompileBtn" onclick="generateFromStagingArea()"
+                                class="inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md">
+                                <span id="stagingCompileText">Compile Selected Staged Letters</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </div>
 
-    </div>
-
-    </div>
-    </main>
+        </div> <!-- Closes max-w-3xl -->
+    </main> <!-- Closes main -->
 
     <!-- Interactive Actions & PDF Preview Modal (With Pre-Generation Review States) -->
     <div id="previewModal" class="fixed inset-0 z-50 overflow-y-auto hidden" role="dialog" aria-modal="true">

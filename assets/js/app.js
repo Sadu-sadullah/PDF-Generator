@@ -520,19 +520,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   filteredRecordsList = [...activeRecordsList];
   renderArchivePage();
+
+  // NEW: Instantly initializes the tab bar on load to apply correct styling and icons immediately
+  switchTab("generate");
 });
 
-// Updated: 5-Tab Visibility Switcher with strict structural checks
+// Corrected: Fully integrated 5-tab visibility, standard-padding, and dynamic Font Awesome icon switcher
 function switchTab(targetTab) {
   const panels = {
-    generate: { panel: "tabPanelGenerate", btn: "tabBtnGenerate" },
-    archive: { panel: "tabPanelArchive", btn: "tabBtnArchive" },
-    email: { panel: "tabPanelEmail", btn: "tabBtnEmail" },
-    upload: { panel: "tabPanelUpload", btn: "tabBtnUpload" },
-    bulk: { panel: "tabPanelBulk", btn: "tabBtnBulk" }, // Holds the Tab E keys
+    generate: {
+      panel: "tabPanelGenerate",
+      btn: "tabBtnGenerate",
+      icon: "fa-file-circle-plus",
+      activeColor: "text-blue-600",
+    },
+    archive: {
+      panel: "tabPanelArchive",
+      btn: "tabBtnArchive",
+      icon: "fa-box-archive",
+      activeColor: "text-amber-500",
+    },
+    email: {
+      panel: "tabPanelEmail",
+      btn: "tabBtnEmail",
+      icon: "fa-paper-plane",
+      activeColor: "text-emerald-500",
+    },
+    upload: {
+      panel: "tabPanelUpload",
+      btn: "tabBtnUpload",
+      icon: "fa-folder-open",
+      activeColor: "text-purple-500",
+    },
+    bulk: {
+      panel: "tabPanelBulk",
+      btn: "tabBtnBulk",
+      icon: "fa-layer-group",
+      activeColor: "text-indigo-500",
+    },
   };
 
-  // Safety check: Exit if the targeted tab key doesn't exist in config mapping
   if (!panels[targetTab]) {
     console.error(
       `Tab mapping for '${targetTab}' was not found inside assets/js/app.js.`,
@@ -540,29 +567,35 @@ function switchTab(targetTab) {
     return;
   }
 
-  // Hide all panel content containers safely
+  // 1. Hide all panel content containers & reset all buttons to standard px-5 py-3 inactive state
   Object.keys(panels).forEach((key) => {
     const panelEl = document.getElementById(panels[key].panel);
     const btnEl = document.getElementById(panels[key].btn);
 
     if (panelEl) panelEl.classList.add("hidden");
     if (btnEl) {
+      // Apply standard inactive padding and text colors
       btnEl.className =
-        "shrink-0 px-3.5 py-2 text-xs font-semibold rounded-lg transition duration-150 text-slate-600 hover:text-slate-900";
+        "shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 text-slate-600 hover:text-slate-900 flex items-center";
+      // Render icon in its default muted slate gray color
+      btnEl.innerHTML = `<i class="fa-solid ${panels[key].icon} text-slate-400 mr-2 text-sm"></i>${btnEl.textContent.trim()}`;
     }
   });
 
-  // Display selected panel content container safely
+  // 2. Display selected panel container & apply standard px-5 py-3 active state
   const targetPanel = document.getElementById(panels[targetTab].panel);
   const targetBtn = document.getElementById(panels[targetTab].btn);
 
   if (targetPanel) targetPanel.classList.remove("hidden");
   if (targetBtn) {
+    // Apply standard active white background & dark text padding
     targetBtn.className =
-      "shrink-0 px-3.5 py-2 text-xs font-semibold rounded-lg transition duration-150 bg-white text-slate-900 shadow-sm";
+      "shrink-0 px-5 py-3 text-xs font-bold rounded-xl transition duration-150 bg-white text-slate-900 shadow-sm flex items-center";
+    // Render icon in its bright, pulsating active color
+    targetBtn.innerHTML = `<i class="fa-solid ${panels[targetTab].icon} ${panels[targetTab].activeColor} mr-2 text-sm animate-pulse"></i>${targetBtn.textContent.trim()}`;
   }
 
-  // Synchronize records dynamically into target dropdown lists
+  // 3. Synchronize records dynamically into target dropdown lists
   if (targetTab === "archive") {
     renderArchivePage();
   } else if (targetTab === "email") {
@@ -629,7 +662,7 @@ function applyFilters() {
   renderArchivePage();
 }
 
-// Updated: Render function displays short-form abbreviations and new audit date columns
+// Corrected: Safely splits and formats dates even if records contain null/empty values (Prevents page-load crashes)
 function renderArchivePage() {
   const tableBody = document.getElementById("recordsTableBody");
   const emptyState = document.getElementById("emptyState");
@@ -638,6 +671,29 @@ function renderArchivePage() {
   const paginationInfo = document.getElementById("paginationInfo");
 
   if (!tableBody) return;
+
+  // --- NEW: Dynamic Metrics Calculations ---
+  const todayStr = new Date().toISOString().split("T")[0];
+  let activeCount = 0;
+  let expiredCount = 0;
+
+  activeRecordsList.forEach((r) => {
+    const expiryDatePart = r.expiry_date ? r.expiry_date.split("T")[0] : "";
+    if (expiryDatePart && expiryDatePart >= todayStr) {
+      activeCount++;
+    } else {
+      expiredCount++;
+    }
+  });
+
+  // Populate Widget text nodes safely
+  const wTotal = document.getElementById("widgetTotalCount");
+  const wActive = document.getElementById("widgetActiveCount");
+  const wExpired = document.getElementById("widgetExpiredCount");
+
+  if (wTotal) wTotal.textContent = activeRecordsList.length;
+  if (wActive) wActive.textContent = activeCount;
+  if (wExpired) wExpired.textContent = expiredCount;
 
   tableBody.innerHTML = "";
   const totalCount = filteredRecordsList.length;
@@ -658,9 +714,6 @@ function renderArchivePage() {
   const endIdx = Math.min(startIdx + recordsPerPage, totalCount);
   const paginatedSlice = filteredRecordsList.slice(startIdx, endIdx);
 
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  // Mappings for compact space saving
   const typeAbbreviations = {
     "Appointment Letter": "AL",
     "Interview Letter": "IL",
@@ -668,12 +721,19 @@ function renderArchivePage() {
   };
 
   paginatedSlice.forEach((record) => {
-    const isRecordValid = record.expiry_date.split("T")[0] >= todayStr;
+    // Safe Date Splitting: Verifies dates exist before splitting to prevent page crashes
+    const issueDatePart = record.issue_date
+      ? record.issue_date.split("T")[0]
+      : "";
+    const expiryDatePart = record.expiry_date
+      ? record.expiry_date.split("T")[0]
+      : "";
+
+    const isRecordValid = expiryDatePart ? expiryDatePart >= todayStr : false;
     const statusBadge = isRecordValid
       ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-100">Valid</span>`
       : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-800 border border-red-100">Expired</span>`;
 
-    // Retrieve shortened type tag
     const shortType = typeAbbreviations[record.certificate_title] || "LT";
 
     const row = document.createElement("tr");
@@ -681,7 +741,6 @@ function renderArchivePage() {
     row.onclick = () => loadRecordToSandbox(record);
 
     row.innerHTML = `
-            <!-- Added: Checkbox cell with stopPropagation click handler to prevent modal popup -->
             <td class="py-4 px-6 text-center" onclick="event.stopPropagation()">
                 <input type="checkbox" name="archiveCheck" value="${record.doc_id}" checked class="w-3.5 h-3.5 text-blue-600 rounded">
             </td>
@@ -692,8 +751,9 @@ function renderArchivePage() {
                     ${shortType}
                 </span>
             </td>
-            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.issue_date.split("T")[0])}</td>
-            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.expiry_date.split("T")[0])}</td>
+            <!-- Safe output rendering: Displays placeholder if date values are null in database -->
+            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${issueDatePart ? formatDateLong(issueDatePart) : "---"}</td>
+            <td class="py-4 px-6 text-slate-500 font-medium text-xs">${expiryDatePart ? formatDateLong(expiryDatePart) : "---"}</td>
             <td class="py-4 px-6">${statusBadge}</td>
             <td class="py-4 px-6 text-right">
                 <button class="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 py-1.5 px-3 rounded-lg transition shadow-sm">
