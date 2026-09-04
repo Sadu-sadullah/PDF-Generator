@@ -827,8 +827,8 @@ function updateFileLabel(slotKey) {
   }
 }
 
-// Mock Email Dispatcher Handler (Frontend mock for Tab C)
-function sendDispatcherEmail(e) {
+// Operational System Email Dispatcher (Compiles PDF on the fly and uploads via AJAX)
+async function sendDispatcherEmail(e) {
   e.preventDefault();
 
   const submitBtn = document.getElementById("dispatcherSubmitBtn");
@@ -836,28 +836,99 @@ function sendDispatcherEmail(e) {
   const spinner = document.getElementById("dispatcherSpinner");
   const status = document.getElementById("dispatcherEmailStatus");
 
-  if (!submitBtn || !status) return;
+  const selectedDocId = document.getElementById("dispatcherLetterSelect").value;
+  const recipient = document.getElementById("dispatcherTo").value;
+  const subject = document.getElementById("dispatcherSubject").value;
+  const message = document.getElementById("dispatcherMessage").value;
+  const attachPdf = document.getElementById("dispatcherAttachCheck").checked;
 
+  if (!selectedDocId || !recipient || !status) {
+    alert("Please select a letter and fill in recipient details.");
+    return;
+  }
+
+  // UI Loading State
   submitBtn.disabled = true;
   spinner.classList.remove("hidden");
-  btnText.textContent = "Dispatching...";
+  btnText.textContent = "Compiling & Sending...";
   status.className = "text-[10px] font-semibold text-blue-600 mt-2";
-  status.textContent =
-    "Connecting to SMTP relay server & compiling attachments...";
+  status.textContent = "Compiling letter to PDF binary blob on the fly...";
   status.classList.remove("hidden");
 
-  setTimeout(() => {
-    status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
-    status.textContent = "Transaction successfully executed. Email dispatched.";
+  try {
+    const formData = new FormData();
+    formData.append("email", recipient);
+    formData.append("subject", subject);
+    formData.append("message", message);
+    formData.append("doc_id", selectedDocId);
+
+    if (attachPdf) {
+      // Find the record object in your local memory array
+      const record = activeRecordsList.find((r) => r.doc_id === selectedDocId);
+      const protocol =
+        window.location.protocol === "https:" ? "https://" : "http://";
+      const verifyUrl = `${protocol}${window.location.host}${window.location.pathname.replace("dashboard.php", "verify.php")}?doc_id=${selectedDocId}`;
+
+      // Instantly map values into hidden rendering template before compile
+      populateTemplate(record, verifyUrl);
+
+      const element = document.getElementById("pdfRenderingTemplate");
+      if (!element) throw new Error("PDF compilation template was not found.");
+
+      // Render PDF as binary Blob in background
+      const pdfBlob = await html2pdf()
+        .set(getHtml2PdfOptions())
+        .from(element)
+        .outputPdf("blob");
+
+      // Append PDF file payload to multipart form
+      formData.append("pdf_file", pdfBlob, `letter_${selectedDocId}.pdf`);
+    }
+
+    status.textContent =
+      "Connecting to SMTP relay server and routing payload...";
+
+    // Post payload to backend mail agent
+    const response = await fetch("send_email.php", {
+      method: "POST",
+      body: formData,
+    });
+
+    // Get raw text output (crucial to capture PHP error messages or debug handshakes)
+    const rawResponseText = await response.text();
+
+    // Parse JSON payload
+    const resData = JSON.parse(rawResponseText);
+
+    if (resData.status === "success") {
+      status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
+      status.textContent =
+        resData.message || "Email successfully dispatched with attachment.";
+
+      // Clear composer form on success after short delay
+      setTimeout(() => {
+        document.getElementById("dispatcherEmailForm").reset();
+        status.classList.add("hidden");
+        submitBtn.disabled = false;
+      }, 2000);
+    } else {
+      status.className = "text-[10px] font-semibold text-red-500 mt-2";
+      status.textContent =
+        resData.message || "Server rejected dispatch command.";
+      submitBtn.disabled = false;
+    }
+  } catch (err) {
+    console.error("Email dispatcher failed:", err);
+    status.className = "text-[10px] font-semibold text-red-500 mt-2";
+
+    // If PHP output contains debug logs, the JSON parser will fail and alert the logs directly
+    status.textContent = "SMTP Handshake Error: " + err.message;
+    alert("SMTP Debug Output:\n" + (rawResponseText || err.message));
+    submitBtn.disabled = false;
+  } finally {
     spinner.classList.add("hidden");
     btnText.textContent = "Dispatch Email";
-
-    setTimeout(() => {
-      document.getElementById("dispatcherEmailForm").reset();
-      status.classList.add("hidden");
-      submitBtn.disabled = false;
-    }, 1500);
-  }, 2000);
+  }
 }
 
 // Mock Supportive Document Upload Handler (Frontend mock for Tab D)
