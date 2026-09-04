@@ -26,13 +26,100 @@ let currentRecord = null;
 let currentVerifyUrl = "";
 let isNewLetterGenerated = false;
 
-// Submit Listener: Loads local draft into sandbox modal for user review (NO server write yet)
+// Submit Listener: Validates data, then loads draft preview (No server write yet)
 document
   .getElementById("certificateForm")
   .addEventListener("submit", function (e) {
     e.preventDefault();
 
-    // Compile temporary draft details object
+    // Reset previous validation errors
+    const inputs = this.querySelectorAll("input, select");
+    inputs.forEach((input) => clearFieldError(input));
+
+    let isFormValid = true;
+
+    // 1. Validate First & Last Name (Alphabetical characters, spaces, and hyphens only, min 2 chars)
+    const firstName = this.querySelector('input[name="first_name"]');
+    const lastName = this.querySelector('input[name="last_name"]');
+    const nameRegex = /^[a-zA-Z\s\-']{2,50}$/;
+
+    if (!nameRegex.test(firstName.value.trim())) {
+      showFieldError(
+        firstName,
+        "Please enter a valid first name (minimum 2 letters, alphabetic only).",
+      );
+      isFormValid = false;
+    }
+    if (!nameRegex.test(lastName.value.trim())) {
+      showFieldError(
+        lastName,
+        "Please enter a valid last name (minimum 2 letters, alphabetic only).",
+      );
+      isFormValid = false;
+    }
+
+    // 2. Validate Passport/ID (Alphanumeric only, must be between 6 and 15 characters)
+    const passport = this.querySelector('input[name="passport"]');
+    const passportRegex = /^[a-zA-Z0-9]{6,15}$/;
+    if (!passportRegex.test(passport.value.trim())) {
+      showFieldError(
+        passport,
+        "Passport must be alphanumeric and between 6 and 15 characters long.",
+      );
+      isFormValid = false;
+    }
+
+    // 3. Validate Date of Birth (Must be a date in the past)
+    const dob = this.querySelector('input[name="dob"]');
+    const dobDate = new Date(dob.value);
+    const today = new Date();
+    if (isNaN(dobDate.getTime()) || dobDate >= today) {
+      showFieldError(dob, "Date of birth must be a valid date in the past.");
+      isFormValid = false;
+    }
+
+    // 4. Validate International Phone Number (Must start with '+' followed by 7 to 15 digits)
+    const phone = this.querySelector('input[name="phone"]');
+    const phoneRegex = /^\+[1-9]\d{6,14}$/;
+    if (!phoneRegex.test(phone.value.trim())) {
+      showFieldError(
+        phone,
+        "Please enter a valid phone number with country code (e.g., +12345678900).",
+      );
+      isFormValid = false;
+    }
+
+    // 5. Validate Email Address (Syntax check)
+    const email = this.querySelector('input[name="email"]');
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.value.trim())) {
+      showFieldError(email, "Please enter a valid email address.");
+      isFormValid = false;
+    }
+
+    // 6. Validate Expiry Date (Must be set later than the Issue Date)
+    const issueDate = this.querySelector('input[name="issue_date"]');
+    const expiryDate = this.querySelector('input[name="expiry_date"]');
+    const issueTime = new Date(issueDate.value);
+    const expiryTime = new Date(expiryDate.value);
+
+    if (issueTime >= expiryTime) {
+      showFieldError(
+        expiryDate,
+        "The expiry date & time must be set later than the issue date & time.",
+      );
+      isFormValid = false;
+    }
+
+    // Halt submission if any validation fails
+    if (!isFormValid) {
+      const firstError = this.querySelector(".border-red-500");
+      if (firstError)
+        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    // --- FORM IS VALID: Proceed with draft compilation preview ---
     const formData = new FormData(this);
     const draftRecord = {
       doc_id: "DRAFT-PREVIEW",
@@ -52,7 +139,6 @@ document
       timezone: formData.get("timezone"),
     };
 
-    // 1. Clone the clean layout template into the modal preview area
     const previewArea = document.getElementById("visualPreviewArea");
     const templateSrc = document.getElementById("pdfRenderingTemplate");
 
@@ -63,13 +149,10 @@ document
       previewArea.appendChild(templateClone);
     }
 
-    // 2. Populate cloned version with the Draft record values
-    // Using a draft placeholder URL for the temporary QR Code
     const draftVerifyUrl =
       "https://your-domain.com/verify.php?doc_id=DRAFT-PREVIEW";
     populateTemplate(draftRecord, draftVerifyUrl);
 
-    // 3. Set Modal UI to PRE-GENERATION REVIEW STATE
     document.getElementById("modalHeaderReview").classList.remove("hidden");
     document.getElementById("modalHeaderFinal").classList.add("hidden");
     document.getElementById("panelReviewState").classList.remove("hidden");
@@ -80,7 +163,6 @@ document
       modalDocIdEl.textContent = "Doc ID: DRAFT-PREVIEW";
     }
 
-    // Open Modal for review
     openModal();
   });
 
@@ -599,15 +681,17 @@ function renderArchivePage() {
     row.onclick = () => loadRecordToSandbox(record);
 
     row.innerHTML = `
+            <!-- Added: Checkbox cell with stopPropagation click handler to prevent modal popup -->
+            <td class="py-4 px-6 text-center" onclick="event.stopPropagation()">
+                <input type="checkbox" name="archiveCheck" value="${record.doc_id}" checked class="w-3.5 h-3.5 text-blue-600 rounded">
+            </td>
             <td class="py-4 px-6 font-semibold text-blue-600 font-mono text-xs group-hover:underline">${record.doc_id}</td>
             <td class="py-4 px-6 font-medium text-slate-800">${record.first_name} ${record.last_name}</td>
-            <!-- Compact abbreviation wrapper with helpful browser tooltip on hover -->
             <td class="py-4 px-6 text-center">
                 <span title="${record.certificate_title}" class="cursor-help inline-flex items-center justify-center px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition">
                     ${shortType}
                 </span>
             </td>
-            <!-- New: Audited Issue and Expiry Columns -->
             <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.issue_date.split("T")[0])}</td>
             <td class="py-4 px-6 text-slate-500 font-medium text-xs">${formatDateLong(record.expiry_date.split("T")[0])}</td>
             <td class="py-4 px-6">${statusBadge}</td>
@@ -1330,4 +1414,140 @@ async function generateFromStagingArea() {
     isNewLetterGenerated = true;
     window.location.reload();
   }, 1500);
+}
+
+// ==========================================
+// FORM FIELD VALIDATION VISUAL HELPERS
+// ==========================================
+
+// Inserts visual error outline and error text directly below invalid input element
+function showFieldError(inputEl, message) {
+  clearFieldError(inputEl); // Reset previous error if existing
+
+  // Apply red border indicators
+  inputEl.classList.add(
+    "border-red-500",
+    "focus:ring-red-500",
+    "focus:border-red-500",
+  );
+  inputEl.classList.remove("border-slate-200", "focus:ring-blue-500");
+
+  // Create helper error text block
+  const errText = document.createElement("p");
+  errText.className =
+    "text-red-500 text-[10px] font-semibold mt-1 field-error-text";
+  errText.textContent = message;
+
+  // Append directly below the input element
+  inputEl.parentNode.appendChild(errText);
+}
+
+// Clears visual error highlights and removes text block
+function clearFieldError(inputEl) {
+  inputEl.classList.remove(
+    "border-red-500",
+    "focus:ring-red-500",
+    "focus:border-red-500",
+  );
+  inputEl.classList.add("border-slate-200", "focus:ring-blue-500");
+
+  const parent = inputEl.parentNode;
+  const existingErr = parent.querySelector(".field-error-text");
+  if (existingErr) {
+    parent.removeChild(existingErr);
+  }
+}
+
+// ==========================================
+// ARCHIVE SELECTION & CSV EXPORTER MODULES
+// ==========================================
+
+// Master Toggle: Checked state on header box replicates on all rows
+function toggleAllArchive(source) {
+  const checkboxes = document.querySelectorAll('input[name="archiveCheck"]');
+  checkboxes.forEach((cb) => (cb.checked = source.checked));
+}
+
+// Client-Side CSV Transpilation Engine
+function convertArrayToCSV(recordsArray) {
+  const headers =
+    "doc_id,first_name,last_name,nationality,passport,dob,designation,salary,phone,email,certificate_title,issue_date,expiry_date,authority,timezone,generated_at\n";
+
+  const rows = recordsArray
+    .map((r) => {
+      // Enforce safe CSV text escaping on string values containing commas
+      const values = [
+        r.doc_id,
+        `"${r.first_name.replace(/"/g, '""')}"`,
+        `"${r.last_name.replace(/"/g, '""')}"`,
+        r.nationality,
+        r.passport,
+        r.dob,
+        `"${r.designation.replace(/"/g, '""')}"`,
+        `"${r.salary.replace(/"/g, '""')}"`,
+        r.phone,
+        r.email,
+        `"${r.certificate_title.replace(/"/g, '""')}"`,
+        r.issue_date,
+        r.expiry_date,
+        `"${r.authority.replace(/"/g, '""')}"`,
+        r.timezone,
+        r.generated_at || "",
+      ];
+      return values.join(",");
+    })
+    .join("\n");
+
+  return headers + rows;
+}
+
+// Exports only rows matching checked checkboxes in active pagination viewport
+function exportSelectedLetters() {
+  const checkboxes = document.querySelectorAll(
+    'input[name="archiveCheck"]:checked',
+  );
+  const selectedDocIds = Array.from(checkboxes).map((cb) => cb.value);
+
+  if (selectedDocIds.length === 0) {
+    alert("Please select at least one record from the list to export.");
+    return;
+  }
+
+  // Filter matching objects out of local memory list
+  const selectedRecords = activeRecordsList.filter((r) =>
+    selectedDocIds.includes(r.doc_id),
+  );
+  const csvContent = convertArrayToCSV(selectedRecords);
+
+  triggerCSVFileDownload(
+    csvContent,
+    `selected_registry_letters_${new Date().toISOString().split("T")[0]}.csv`,
+  );
+}
+
+// Exports full database entries
+function exportAllLetters() {
+  if (activeRecordsList.length === 0) {
+    alert("No letter records discovered in system registry to export.");
+    return;
+  }
+
+  const csvContent = convertArrayToCSV(activeRecordsList);
+  triggerCSVFileDownload(
+    csvContent,
+    `full_letters_registry_export_${new Date().toISOString().split("T")[0]}.csv`,
+  );
+}
+
+// Client-Side download click router
+function triggerCSVFileDownload(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }

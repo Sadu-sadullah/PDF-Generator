@@ -31,18 +31,20 @@ function maskId($id)
     return substr($id, 0, 2) . str_repeat('*', $len - 4) . substr($id, -2);
 }
 
-// Query file-based JSON storage
+// Query MySQL Database instead of old file-based JSON
 if (!empty($doc_id)) {
-    $json_file = 'data/records.json';
-    if (file_exists($json_file)) {
-        $records = json_decode(file_get_contents($json_file), true) ?: [];
-        if (isset($records[$doc_id])) {
-            $record = $records[$doc_id];
-        } else {
+    require_once 'includes/db.php';
+
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM letters WHERE doc_id = :doc_id");
+        $stmt->execute([':doc_id' => $doc_id]);
+        $record = $stmt->fetch();
+
+        if (!$record) {
             $error = 'The requested Document ID is not recognized in our registry database.';
         }
-    } else {
-        $error = 'The system registry database is currently unavailable.';
+    } catch (PDOException $e) {
+        $error = 'The database system is currently unavailable: ' . $e->getMessage();
     }
 } else {
     $error = 'No Document ID parameter was provided for validation query.';

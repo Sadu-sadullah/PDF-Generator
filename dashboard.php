@@ -356,18 +356,52 @@ require_once 'includes/auth.php';
                     </div>
                 </div>
 
-                <!-- Responsive Archive Table -->
+                <!-- Responsive Archive Table with Integrated Export Action Bar -->
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+
+                    <!-- Table Header Action Bar (New Feature) -->
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-slate-50/50 border-b border-slate-200 px-6 py-4 gap-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Letter Transactions
+                            Database</span>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <!-- Export Selected Button -->
+                            <button onclick="exportSelectedLetters()"
+                                class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+                                <svg class="w-3.5 h-3.5 mr-1.5 text-slate-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export Selected
+                            </button>
+                            <!-- Export All Button -->
+                            <button onclick="exportAllLetters()"
+                                class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm">
+                                <svg class="w-3.5 h-3.5 mr-1.5 text-white" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Export All
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr
-                                    class="border-b border-slate-100 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    class="border-b border-slate-100 bg-slate-50/20 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                    <!-- Added: Master selection checkbox -->
+                                    <th class="py-4 px-6 text-center w-12"><input type="checkbox" id="archiveSelectAll"
+                                            checked onclick="toggleAllArchive(this)"
+                                            class="w-3.5 h-3.5 text-blue-600 rounded"></th>
                                     <th class="py-4 px-6">Doc ID</th>
                                     <th class="py-4 px-6">Recipient Name</th>
-                                    <th class="py-4 px-6 text-center">Type</th> <!-- Sized down column -->
-                                    <th class="py-4 px-6">Issued Date</th> <!-- New column -->
-                                    <th class="py-4 px-6">Expiry Date</th> <!-- New column -->
+                                    <th class="py-4 px-6 text-center">Type</th>
+                                    <th class="py-4 px-6">Issued Date</th>
+                                    <th class="py-4 px-6">Expiry Date</th>
                                     <th class="py-4 px-6">Status</th>
                                     <th class="py-4 px-6 text-right">Preview</th>
                                 </tr>
@@ -1251,18 +1285,24 @@ require_once 'includes/auth.php';
     <!-- Frontend controller script -->
     <script src="assets/js/app.js"></script>
 
-    <!-- Injection of PHP records database & staging database directly into JS scope -->
+    <!-- Injection of MySQL records database directly into JS scope on page load -->
+    <?php
+    require_once 'includes/db.php';
+    $db_records = [];
+    try {
+        // Fetch all generated letters ordered newest first
+        $stmt = $pdo->query("SELECT * FROM letters ORDER BY generated_at DESC");
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $row) {
+            $db_records[$row['doc_id']] = $row;
+        }
+    } catch (PDOException $e) {
+        // Fallback to empty if connection is offline during boot
+    }
+    ?>
     <script>
-        const databaseInjectedRecords = <?php
-        $json_file = 'data/records.json';
-        echo file_exists($json_file) ? file_get_contents($json_file) : '{}';
-        ?>;
-
-        // Dynamic loading of Way 2 Staging Database
-        const databaseInjectedStaged = <?php
-        $staged_file = 'data/staged_records.json';
-        echo file_exists($staged_file) ? file_get_contents($staged_file) : '[]';
-        ?>;
+        const databaseInjectedRecords = <?php echo json_encode($db_records); ?>;
+        const databaseInjectedStaged = []; // Staging can remain mock until needed
     </script>
 </body>
 

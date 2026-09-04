@@ -1,4 +1,5 @@
 <?php
+// generate_pdf.php
 // Start session and verify authentication
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -20,27 +21,6 @@ error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Auto-check: Create data directory if it doesn't exist
-    $dir = 'data';
-    if (!file_exists($dir)) {
-        if (!mkdir($dir, 0777, true)) {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'The "data/" folder does not exist and could not be created automatically. Please create a folder named "data" in the project root.'
-            ]);
-            exit;
-        }
-    }
-
-    // Auto-check: Verify write permissions
-    if (!is_writable($dir)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'The "data/" folder exists but is not writable. Please update the folder permissions so PHP can save records.'
-        ]);
-        exit;
-    }
-
     $doc_id = 'DOC-2026-' . strtoupper(substr(md5(uniqid()), 0, 6));
 
     $data = [
@@ -53,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'phone' => trim(htmlspecialchars($_POST['phone'] ?? '')),
         'email' => trim(htmlspecialchars($_POST['email'] ?? '')),
         'certificate_title' => trim(htmlspecialchars($_POST['certificate_title'] ?? '')),
-        'issue_date' => trim(htmlspecialchars($_POST['issue_date'] ?? date('Y-m-d'))),
-        'expiry_date' => trim(htmlspecialchars($_POST['expiry_date'] ?? date('Y-m-d', strtotime('+1 year')))),
+        'issue_date' => trim(htmlspecialchars($_POST['issue_date'] ?? date('Y-m-d\TH:i'))),
+        'expiry_date' => trim(htmlspecialchars($_POST['expiry_date'] ?? date('Y-m-d\TH:i', strtotime('+1 year')))),
         'authority' => trim(htmlspecialchars($_POST['authority'] ?? '')),
         'designation' => trim(htmlspecialchars($_POST['designation'] ?? '')),
         'salary' => trim(htmlspecialchars($_POST['salary'] ?? '')),
@@ -62,27 +42,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'generated_at' => date('Y-m-d H:i:s')
     ];
 
-    $json_file = $dir . '/records.json';
-    $records = [];
+    // Save record to MySQL Database (Replaces old JSON file persistence)
+    require_once 'includes/db.php';
 
-    if (file_exists($json_file)) {
-        $file_content = file_get_contents($json_file);
-        $records = json_decode($file_content, true) ?: [];
-    }
+    try {
+        $sql = "INSERT INTO letters (doc_id, first_name, last_name, nationality, passport, dob, designation, salary, phone, email, certificate_title, issue_date, expiry_date, authority, timezone) 
+                VALUES (:doc_id, :first_name, :last_name, :nationality, :passport, :dob, :designation, :salary, :phone, :email, :certificate_title, :issue_date, :expiry_date, :authority, :timezone)";
 
-    $records[$doc_id] = $data;
-
-    if (file_put_contents($json_file, json_encode($records, JSON_PRETTY_PRINT)) === false) {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':doc_id' => $data['doc_id'],
+            ':first_name' => $data['first_name'],
+            ':last_name' => $data['last_name'],
+            ':nationality' => $data['nationality'],
+            ':passport' => $data['passport'],
+            ':dob' => $data['dob'],
+            ':designation' => $data['designation'],
+            ':salary' => $data['salary'],
+            ':phone' => $data['phone'],
+            ':email' => $data['email'],
+            ':certificate_title' => $data['certificate_title'],
+            ':issue_date' => $data['issue_date'],
+            ':expiry_date' => $data['expiry_date'],
+            ':authority' => $data['authority'],
+            ':timezone' => $data['timezone']
+        ]);
+    } catch (PDOException $e) {
         echo json_encode([
             'status' => 'error',
-            'message' => 'Failed to write data to records.json. Check write permissions.'
+            'message' => 'Database registration failed: ' . $e->getMessage()
         ]);
         exit;
     }
 
+    // Generate public verification URL
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
     $verify_url = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . "/verify.php?doc_id=" . $doc_id;
 
+    // Return successful response payload back to JavaScript client
     echo json_encode([
         'status' => 'success',
         'doc_id' => $doc_id,
