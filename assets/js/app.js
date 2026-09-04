@@ -763,21 +763,36 @@ function loadRecordToSandbox(record) {
   openModal();
 }
 
-// Synchronizes actual database records into target <select> dropdown inputs
+// Updated: Dropdown sync engine with diagnostic alerts
 function syncDropdownSelector(dropdownId) {
   const selector = document.getElementById(dropdownId);
-  if (!selector) return;
 
-  // Reset dropdown container option states
+  // Diagnostic Alert: If the element doesn't exist in the HTML, log it clearly in the F12 Console
+  if (!selector) {
+    console.error(
+      `CRITICAL: Selector element with ID "${dropdownId}" was not found in your dashboard.php DOM. Check for typos.`,
+    );
+    return;
+  }
+
   selector.innerHTML = '<option value="">Select a generated letter...</option>';
 
-  // Loop through dynamic local database to append options
+  if (activeRecordsList.length === 0) {
+    console.warn("Database records array is empty inside JS scope.");
+  }
+
   activeRecordsList.forEach((record) => {
     const option = document.createElement("option");
     option.value = record.doc_id;
     option.textContent = `${record.doc_id} - ${record.first_name} ${record.last_name} (${record.certificate_title})`;
     selector.appendChild(option);
   });
+
+  if (dropdownId === "uploadLetterSelect") {
+    selector.onchange = updateUploadStatusFields;
+    // Run status updater immediately to reset badges to 'Pending' on render
+    updateUploadStatusFields();
+  }
 }
 
 // Auto-populates inputs inside the dispatcher panel based on selected Letter ID
@@ -931,8 +946,8 @@ async function sendDispatcherEmail(e) {
   }
 }
 
-// Mock Supportive Document Upload Handler (Frontend mock for Tab D)
-function uploadSupportiveDocs(e) {
+// Operational Supportive Document Uploader (Submits multipart/form-data via AJAX)
+async function uploadSupportiveDocs(e) {
   e.preventDefault();
 
   const submitBtn = document.getElementById("uploadSubmitBtn");
@@ -940,41 +955,58 @@ function uploadSupportiveDocs(e) {
   const spinner = document.getElementById("uploadSpinner");
   const status = document.getElementById("uploadStatus");
 
-  if (!submitBtn || !status) return;
+  const form = document.getElementById("supportiveDocsForm");
+  if (!form || !submitBtn || !status) return;
 
+  // UI Loading state
   submitBtn.disabled = true;
   spinner.classList.remove("hidden");
-  btnText.textContent = "Uploading Files...";
+  btnText.textContent = "Uploading...";
   status.className = "text-[10px] font-semibold text-blue-600 mt-2";
   status.textContent =
-    "Uploading payload files to 'data/' folder & mapping references...";
+    "Uploading payload files to 'data/' folder & updating database...";
   status.classList.remove("hidden");
 
-  setTimeout(() => {
-    status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
-    status.textContent =
-      "Supportive credentials successfully associated and stored on server.";
+  const formData = new FormData(form);
+
+  try {
+    const response = await fetch("upload_docs.php", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status === "success") {
+      status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
+      status.textContent = data.message || "Files successfully uploaded.";
+
+      isNewLetterGenerated = true; // Set to true so page reloads on modal close to refresh dataset
+
+      setTimeout(() => {
+        form.reset();
+        status.classList.add("hidden");
+        submitBtn.disabled = false;
+        window.location.reload(); // Reload to refresh local records cache
+      }, 1500);
+    } else {
+      status.className = "text-[10px] font-semibold text-red-500 mt-2";
+      status.textContent = data.message || "Upload failed.";
+      submitBtn.disabled = false;
+    }
+  } catch (err) {
+    console.error("File upload failed:", err);
+    status.className = "text-[10px] font-semibold text-red-500 mt-2";
+    status.textContent = "Error: " + err.message;
+    submitBtn.disabled = false;
+  } finally {
     spinner.classList.add("hidden");
     btnText.textContent = "Upload Documents";
-
-    setTimeout(() => {
-      document.getElementById("supportiveDocsForm").reset();
-
-      // Clear browse names
-      ["passport", "national_id", "degree", "cv", "employment"].forEach(
-        (key) => {
-          const label = document.getElementById(`label_${key}`);
-          if (label) {
-            label.textContent = "Choose file...";
-            label.className = "truncate pr-2 text-slate-400";
-          }
-        },
-      );
-
-      status.classList.add("hidden");
-      submitBtn.disabled = false;
-    }, 1500);
-  }, 2000);
+  }
 }
 
 // Utility: Resets the calendar filter element
@@ -1621,4 +1653,123 @@ function triggerCSVFileDownload(csvContent, filename) {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// Updated: Queries local database parameters to toggle UI Status Badges, View Links, and Delete Buttons
+function updateUploadStatusFields() {
+  const selector = document.getElementById("uploadLetterSelect");
+  if (!selector) return;
+
+  const selectedDocId = selector.value;
+  const record = activeRecordsList.find((r) => r.doc_id === selectedDocId);
+
+  const slots = ["passport", "national_id", "degree", "cv", "employment"];
+
+  slots.forEach((slot) => {
+    const statusBadge = document.getElementById(`status_${slot}`);
+    const fileLabel = document.getElementById(`label_${slot}`);
+    const actionSpan = document.getElementById(`action_${slot}`);
+
+    if (!statusBadge || !fileLabel || !actionSpan) return;
+
+    const dbColumnKey = `file_${slot}`;
+    const filePath = record ? record[dbColumnKey] : null;
+
+    if (filePath) {
+      // Update badge to GREEN: Uploaded
+      statusBadge.className =
+        "text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100";
+      statusBadge.textContent = "Uploaded";
+
+      // Turn the left label into an interactive preview link
+      fileLabel.innerHTML = `
+                <a href="${filePath}" target="_blank" class="inline-flex items-center text-blue-600 hover:text-blue-800 hover:underline font-semibold" onclick="event.stopPropagation()">
+                    <svg class="w-3.5 h-3.5 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    View Uploaded File
+                </a>
+            `;
+
+      // NEW: Replace "Browse" on the right with a red "Delete" action button
+      // event.preventDefault() and event.stopPropagation() prevent the click from opening the browse file explorer
+      actionSpan.innerHTML = `
+                <button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteSupportiveDoc('${slot}')" class="text-red-500 hover:text-red-700 font-bold shrink-0 focus:outline-none">
+                    Delete
+                </button>
+            `;
+      actionSpan.className = "shrink-0";
+    } else {
+      // Update badge to AMBER: Pending
+      statusBadge.className =
+        "text-[9px] font-bold text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100";
+      statusBadge.textContent = "Pending";
+
+      fileLabel.textContent = "Choose file...";
+      fileLabel.className = "truncate pr-2 text-slate-400";
+
+      // Restore blue "Browse" action on the right
+      actionSpan.textContent = "Browse";
+      actionSpan.className = "text-blue-600 font-semibold shrink-0";
+    }
+  });
+}
+
+// Operational Supportive Document Deletion Controller
+async function deleteSupportiveDoc(slotKey) {
+  const selector = document.getElementById("uploadLetterSelect");
+  if (!selector) return;
+
+  const selectedDocId = selector.value;
+
+  // User confirmation warning
+  const confirmDelete = confirm(
+    `Are you sure you want to permanently delete this supportive document? This action cannot be undone.`,
+  );
+  if (!confirmDelete) return;
+
+  const status = document.getElementById("uploadStatus");
+  if (status) {
+    status.className = "text-[10px] font-semibold text-blue-600 mt-2";
+    status.textContent =
+      "Deleting file from server & resetting database fields...";
+    status.classList.remove("hidden");
+  }
+
+  try {
+    const payload = new FormData();
+    payload.append("doc_id", selectedDocId);
+    payload.append("slot", slotKey);
+
+    const response = await fetch("delete_doc.php", {
+      method: "POST",
+      body: payload,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status === "success") {
+      if (status) {
+        status.className = "text-[10px] font-semibold text-emerald-600 mt-2";
+        status.textContent = "File deleted successfully.";
+      }
+
+      isNewLetterGenerated = true; // Set to true so page reloads on modal close to refresh local records cache
+
+      setTimeout(() => {
+        window.location.reload(); // Reload to refresh local records database cache
+      }, 1000);
+    } else {
+      alert(data.message || "Deletion failed.");
+      if (status) status.classList.add("hidden");
+    }
+  } catch (err) {
+    console.error("File deletion failed:", err);
+    alert("Deletion failed: " + err.message);
+    if (status) status.classList.add("hidden");
+  }
 }

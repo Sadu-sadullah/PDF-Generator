@@ -41,10 +41,28 @@ try {
         expiry_date DATETIME NOT NULL,
         authority VARCHAR(255) NOT NULL,
         timezone VARCHAR(20) NOT NULL,
-        generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        
+        -- Supportive File Columns
+        file_passport VARCHAR(255) DEFAULT NULL,
+        file_national_id VARCHAR(255) DEFAULT NULL,
+        file_degree VARCHAR(255) DEFAULT NULL,
+        file_cv VARCHAR(255) DEFAULT NULL,
+        file_employment VARCHAR(255) DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
     $pdo->exec($tableSql);
+
+    // Self-Check: Check if column 'file_passport' exists. If not, append the columns dynamically
+    $checkCol = $pdo->query("SHOW COLUMNS FROM letters LIKE 'file_passport'")->fetch();
+    if (!$checkCol) {
+        $pdo->exec("ALTER TABLE letters 
+            ADD COLUMN file_passport VARCHAR(255) DEFAULT NULL,
+            ADD COLUMN file_national_id VARCHAR(255) DEFAULT NULL,
+            ADD COLUMN file_degree VARCHAR(255) DEFAULT NULL,
+            ADD COLUMN file_cv VARCHAR(255) DEFAULT NULL,
+            ADD COLUMN file_employment VARCHAR(255) DEFAULT NULL");
+    }
 
 } catch (\PDOException $e) {
     header('Content-Type: application/json');
